@@ -1,0 +1,15 @@
+# DS_store files
+.DS_store
+
+# Testing Outputs
+testing_materials/example_outputs/*
+
+# Python
+src/GridApplication/__pycache__
+*pyc
+
+# Output
+output/*
+
+# Data
+data/*
