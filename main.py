@@ -12,34 +12,21 @@ def parse_args() -> argparse.Namespace:
     argparse.Namespace
     Object containing parsed arguments.
     """
-    parser = argparse.ArgumentParser(description="File paths for input and output files.")
+    file_parser = argparse.ArgumentParser(description="Takes the directory and file arguments needed for the program.")
 
-    parser.add_argument(
-        "-i", "--input_blast_files",
-        required=True,
-        default=["example_data/blast_files/",
-                    "data/Binsularis_BLAST_Hepatozoon.tsv",
-                    "data/Binsularis_BLAST_Mitochondrion.tsv",
-                    "data/Binsularis_BLAST_SexualChromosomes.tsv"],
-        type=str,
-        help="Path to input files containing BLAST results."
-    )
-    parser.add_argument(
-        "--coverage_threshold",
-        required=False,
-        default=0.9,
-        type=float,
-        help="Threshold for coverage to classify contigs. Default is 0.9."
-    )
-    parser.add_argument(
-        "--contig_size_threshold",
-        required=False,
-        default=3000,
-        type=int,
-        help="Threshold for contig size to classify contigs. Default is 3000."
-    )
-
-    return parser.parse_args()
+    file_parser.add_argument("-c", "--csv_output", 
+                            type=Path, required=True, 
+                            help="CSV path and filename output.")
+    
+    file_parser.add_argument("-f", "--fasta_files", 
+                            type=Path, required=True,
+                            help="Directory containing FASTA files.")
+    
+    file_parser.add_argument("-m", "--motif_file", 
+                            type=Path, required=True,
+                            help="CSV file containing the motif information.")
+    
+    return file_parser.parse_args()
 
 def validate_args(args: argparse.Namespace):
     """
@@ -48,38 +35,58 @@ def validate_args(args: argparse.Namespace):
     Parameters
     ----------
     args : argparse.Namespace
-    Object containing parsed arguments.
+        Object containing parsed arguments.
 
     Raises
     ------
     ValueError
-    If any of the arguments are invalid.
+        If any of the arguments are invalid.
     """
 
-# Checking blast directory path and contained file paths
-    directory = Path(args.input_blast_files)
+    # Validate FASTA directory
+    fasta_dir = Path(args.fasta_files)
 
-    if not directory.is_dir():
-        raise ValueError("Input BLAST files path must be a directory containing TSV files.")
+    if not fasta_dir.exists():
+        raise ValueError("FASTA files path does not exist.")
 
-    for file in directory.iterdir():
-        if not file.name.endswith(".tsv"):
-            raise ValueError("Input files must be TSV files with .tsv extension.")
-        filepath = Path(file)
-        if not filepath.is_file():
-            raise ValueError(f"Input file {file} does not exist.")
+    if not fasta_dir.is_dir():
+        raise ValueError("FASTA files path must be a directory containing FASTA files.")
 
-# Checking the files for appropriate extensions and existence.
-    if not args.contig_file.endswith(".txt"):
-        raise ValueError("Contig file must be a text file with .txt extension.")
-    
-# Checking the thresholds.
-    if not 0 <= args.coverage_threshold <= 1:
-        raise ValueError("Coverage threshold must be a float between 0 and 1.")
-    if args.contig_size_threshold <= 0:
-        raise ValueError("Contig size threshold must be a positive integer.")
-    if not isinstance(args.contig_size_threshold, int):
-        raise ValueError("Contig size threshold must be an integer.")
+    # Ensure directory contains at least one FASTA file
+    fasta_files = list(fasta_dir.iterdir())
+    if not fasta_files:
+        raise ValueError("FASTA directory is empty.")
+
+    # Check file extensions in FASTA directory
+    valid_extensions = {".fasta", ".fa", ".fna"}
+    for file in fasta_files:
+        if file.is_file() and file.suffix.lower() not in valid_extensions:
+            raise ValueError(
+                f"Invalid file detected in FASTA directory: {file.name}. "
+                f"Expected FASTA extensions: {valid_extensions}"
+            )
+
+    # Validate motif file
+    motif_file = Path(args.motif_file)
+
+    if not motif_file.exists():
+        raise ValueError("Motif file does not exist.")
+
+    if not motif_file.is_file():
+        raise ValueError("Motif file path must point to a file.")
+
+    if motif_file.suffix.lower() != ".csv":
+        raise ValueError("Motif file must be a CSV file (.csv).")
+
+    # Validate output path (basic check)
+    output_path = Path(args.csv_output)
+
+    if output_path.suffix.lower() != ".csv":
+        raise ValueError("CSV output file must have a .csv extension.")
+
+    # Ensure output directory exists (optional but useful)
+    if output_path.parent and not output_path.parent.exists():
+        raise ValueError("Output directory does not exist.")
 
 def main() -> int: 
     args = parse_args()

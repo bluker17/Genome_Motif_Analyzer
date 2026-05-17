@@ -5,7 +5,8 @@
 testing_materials/example_outputs/*
 
 # Python
-src/GridApplication/__pycache__
+src/motif_locator/__pycache__
+src/statistic_analysis/__pycache__
 *pyc
 
 # Output
