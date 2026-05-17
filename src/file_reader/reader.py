@@ -1,31 +1,42 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import csv
 from pathlib import Path
+from typing import Iterator, Tuple, List
 from Bio import SeqIO
 
+class Sequences:
+    def __init__(self, fasta_dir: Path) -> None:
+        self.fasta_dir = fasta_dir
+        self.fasta_files: List[Path] = []
 
-# -------------------------
-# FILE DISCOVERY
-# -------------------------
-def collect_fasta_files(fasta_dir: Path) -> list[Path]:
-    """
-    Recursively collect FASTA files from a directory.
+    def collect_fasta_files(self) -> List[Path]:
+        """
+        Recursively collect FASTA files from a directory.
+        """
+        for ext in [".fa", ".fasta", ".fna"]:
+            self.fasta_files.extend(self.fasta_dir.rglob(f"*{ext}"))
+        return self.fasta_files
 
-    Supported extensions: .fa, .fasta, .fna
-    """
-    fasta_files = []
-    for ext in [".fa", ".fasta", ".fna"]:
-        fasta_files.extend(fasta_dir.rglob(f"*{ext}"))
-    return fasta_files
+class Enzymes:
+    def __init__(self, motif_file: str) -> None:
+        self.motif_file = motif_file
+        self.enzyme_info = {}
+
+    def collect_motifs(self) -> dict:
+        with open(self.motif_file, "r", newline="") as f:
+            reader = csv.DictReader(f)
+
+            for row in reader:
+                motif = row["motif_sequence"].strip()
+
+                self.enzyme_info[motif] = {
+                    "motif_sequence": row["motif_sequence"],
+                    "enzyme": row["enzyme"].strip(),
+                    "organism": row["organism"].strip()
+                }
+        return self.enzyme_info
 
 
-# -------------------------
-# FASTA PARSING
-# -------------------------
-def read_chromosomes(file: Path):
-    """
-    Yield (chromosome_name, sequence) from a FASTA file.
-    """
-    for record in SeqIO.parse(file, "fasta"):
-        yield record.description, str(record.seq)
+

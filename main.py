@@ -1,7 +1,16 @@
-#!usr/bin/env python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
 import argparse, sys
 from pathlib import Path
+
+# File handling
+from src.file_reader.reader import Sequences
+from src.file_reader.reader import Enzymes
+
+# Motif locating
+from src.motif_locator.locator import Motifs
+
 
 def parse_args() -> argparse.Namespace:
     """
@@ -93,33 +102,42 @@ def main() -> int:
 
     sys.stdout.write("""
     Arguments received:
-        Input BLAST File Paths: {input_blast_files}
-        Coverage Threshold: {coverage_threshold}
-        Contig Size Threshold: {contig_size_threshold}
+        Directory containing FASTA files: {fasta_files}
+        Motif information CSV file: {motif_file}
+        Output CSV file: {csv_output}
     """.format(
-        input_blast_files=args.input_blast_files,
-        coverage_threshold=args.coverage_threshold,
-        contig_size_threshold=args.contig_size_threshold,
+        fasta_files=args.fasta_files,
+        motif_file=args.motif_file,
+        csv_output=args.csv_output
     ))
 
-    validate_args(args)
+    # validate_args(args)
+
+    #==================================
+    # INPUT FILE HANDLING
+    #==================================
+    genomes = Sequences(args.fasta_files)
+    genome_files = genomes.collect_fasta_files()
+    # print(genome_files)
+
+    motifs = Enzymes(args.motif_file)
+    motif_info = motifs.collect_motifs()
+    # print(motif_info)
 
 
-    # Placeholder for the main logic of the program
+    #==================================
+    # MOTIF LOCATOR
+    #==================================
+    motif_location_results = Motifs(motif_info, genomes)
+    print(motif_location_results)
 
 
 
     sys.stdout.write("""
     Program executed successfully.
-        Output Data Frame File Path: {data_frame_file}
-        Output Summary Statistics File Path: {summary_stats_file}
-        Contigs Bar Plot generated at: {contigs_barplot}
-        Base Pairs Bar Plot generated at: {bps_barplot}
+        Output CSV File: {csv_output}
     """.format(
-        data_frame_file=args.data_frame_file,
-        summary_stats_file=args.summary_stats_file,
-        contigs_barplot=args.contigs_barplot,
-        bps_barplot=args.bps_barplot
+        csv_output=args.csv_output
     ))
 
     return 0
