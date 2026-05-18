@@ -60,7 +60,10 @@ class CSVWriter:
         with open(self.filename, "a", newline="") as f:
             writer = csv.writer(f)
 
-            for strand in ["forward", "reverse"]:
+            for strand in ("forward", "reverse"):
+
+                if strand not in stats:
+                    continue
                 probs = stats[strand]["base_probs"]
 
                 for motif, data in stats[strand]["proportion_test"].items():

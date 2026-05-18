@@ -31,19 +31,12 @@ class Enzymes:
 
             for row in reader:
                 motif = row["motif_sequence"].strip()
-                if len(motif) <= 4:
-                    self.short_enzyme_info[motif] = {
-                        "motif_sequence": row["motif_sequence"],
-                        "enzyme": row["enzyme"].strip(),
-                        "organism": row["organism"].strip()
-                    }
-                else:
-                    self.long_enzyme_info[motif] = {
-                        "motif_sequence": row["motif_sequence"],
-                        "enzyme": row["enzyme"].strip(),
-                        "organism": row["organism"].strip()
-                    }
-        return self.short_enzyme_info, self.long_enzyme_info
+                self.short_enzyme_info[motif] = {
+                    "motif_sequence": row["motif_sequence"],
+                    "enzyme": row["enzyme"].strip(),
+                    "organism": row["organism"].strip()
+                }
+        return self.short_enzyme_info
 
 
 

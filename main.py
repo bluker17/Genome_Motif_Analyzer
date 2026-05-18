@@ -9,8 +9,7 @@ from src.file_reader.reader import Sequences
 from src.file_reader.reader import Enzymes
 
 # Motif locating
-from src.motif_locator.numpy_locator import Numpy_Motif_Search
-from src.motif_locator.numba_locator import Numba_Motif_Search
+from src.motif_locator.locator import AhoCorasick_Motif_Search
 
 # Statistical analysis
 from src.statistic_analysis.statistics import Statistics
@@ -41,9 +40,10 @@ def parse_args() -> argparse.Namespace:
                             type=Path, required=True,
                             help="CSV file containing the motif information.")
     
-    # file_parser.add_argument("-s", "--strand_to_search",
-    #                          type=str, required=True,
-    #                          help="Distinguish which strand to investigate. Options are 'forward', 'reverse', or 'both'.")
+    file_parser.add_argument("-s", "--strand_to_search",
+                             type=str, required=True,
+                             choices=["forward", "reverse", "both"],
+                             help="Distinguishes which strand to investigate. Options are 'forward', 'reverse', or 'both'.")
     
     return file_parser.parse_args()
 
@@ -64,6 +64,7 @@ def validate_args(args: argparse.Namespace):
 
     # Validate FASTA directory
     fasta_dir = Path(args.fasta_files)
+    valid_extensions = [".fasta", ".fa", ".fna", ".faa", ".fas", ".ffn", ".frn"]
 
     if not fasta_dir.exists():
         raise ValueError("FASTA files path does not exist.")
@@ -71,41 +72,45 @@ def validate_args(args: argparse.Namespace):
     if not fasta_dir.is_dir():
         raise ValueError("FASTA files path must be a directory containing FASTA files.")
 
-    # Ensure directory contains at least one FASTA file
-    fasta_files = list(fasta_dir.iterdir())
-    if not fasta_files:
-        raise ValueError("FASTA directory is empty.")
+    if not fasta_dir.is_relative_to("data/") and not fasta_dir.is_relative_to("testing_materials/example_data/"):
+        raise FileNotFoundError("FASTA directory must be located in 'data/'.")
 
-    # Check file extensions in FASTA directory
-    valid_extensions = {".fasta", ".fa", ".fna"}
-    for file in fasta_files:
-        if file.is_file() and file.suffix.lower() not in valid_extensions:
-            raise ValueError(
-                f"Invalid file detected in FASTA directory: {file.name}. "
-                f"Expected FASTA extensions: {valid_extensions}"
-            )
+    # Recursively find FASTA files
+    fasta_files = [file for file in fasta_dir.rglob("*") if file.is_file() and file.suffix.lower() in valid_extensions]
+
+    # Ensure at least one FASTA file exists
+    if not fasta_files:
+        raise ValueError(
+            f"No FASTA files found in '{fasta_dir}'. "
+            f"Expected extensions: {sorted(valid_extensions)}"
+        )
 
     # Validate motif file
     motif_file = Path(args.motif_file)
 
     if not motif_file.exists():
-        raise ValueError("Motif file does not exist.")
+        raise FileNotFoundError("Motif file does not exist.")
 
     if not motif_file.is_file():
-        raise ValueError("Motif file path must point to a file.")
+        raise FileNotFoundError("Motif file path must point to a file.")
 
     if motif_file.suffix.lower() != ".csv":
         raise ValueError("Motif file must be a CSV file (.csv).")
+    
+    if not motif_file.is_relative_to("data/") and not motif_file.is_relative_to("testing_materials/example_data/"):
+        raise FileNotFoundError("Motif file must be located in 'data/'.")
 
-    # Validate output path (basic check)
+    # Validate CSV output file
     output_path = Path(args.csv_output)
+
+    if not output_path.is_file():
+        raise FileNotFoundError("CSV output file must point to a file.")
 
     if output_path.suffix.lower() != ".csv":
         raise ValueError("CSV output file must have a .csv extension.")
 
-    # Ensure output directory exists (optional but useful)
-    if output_path.parent and not output_path.parent.exists():
-        raise ValueError("Output directory does not exist.")
+    if not output_path.is_relative_to("output/") and not output_path.is_relative_to("testing_materials/example_outputs/"):
+        raise FileNotFoundError("CSV output file must be located in 'output/'.")
 
 def main() -> int: 
     args = parse_args()
@@ -121,7 +126,7 @@ def main() -> int:
         csv_output=args.csv_output
     ))
 
-    # validate_args(args)
+    validate_args(args)
 
     #==================================
     # INPUT FILE HANDLING
@@ -131,9 +136,7 @@ def main() -> int:
     # print(genome_files)
 
     motifs = Enzymes(args.motif_file)
-    short_motifs, long_motifs = motifs.collect_motifs()
-    # print(short_motifs)
-    # print(long_motifs)
+    short_motifs = motifs.collect_motifs()
 
 
     #==================================
@@ -146,46 +149,21 @@ def main() -> int:
     # Initialize the statistics class
     stats_engine = Statistics()
 
-    # Search for motifs in each genome. If the motif length is less than or equal to 4 bases then the sliding window method is used. Otherwise, numba is used.
-
-    # Initialize engines once
-    numpy_locator = Numpy_Motif_Search(short_motifs, genome_files)
-    numba_locator = Numba_Motif_Search(long_motifs, genome_files)
-
+    # # Initialize engines once
+    ahocorasick = AhoCorasick_Motif_Search(short_motifs, genome_files, args.strand_to_search)
     for genome in genome_files:
         print(f"\nProcessing {genome}")
 
-        for chrom_name, sequence in numpy_locator.stream_fasta(genome):
-            print(f"\tProcessing chromosome {chrom_name}")
+        for chrom_name, sequence in ahocorasick.stream_fasta(genome):
+            # print(f"\tProcessing chromosome {chrom_name}")
+            chrom_stats = ahocorasick.process_chromosome(chrom_name, sequence)
+            chrom_stats = stats_engine.run_proportion_test(chrom_stats)
 
-            if short_motifs:
-                chrom_stats = numpy_locator.process_chromosome(
-                    chrom_name,
-                    sequence
-                )
-
-                chrom_stats = stats_engine.run_proportion_test(chrom_stats)
-
-                csv_writer.append_csv(
-                    stats=chrom_stats,
-                    fasta_file=genome.name,
-                    chrom_name=chrom_name
-                )
-
-            if long_motifs:
-                chrom_stats = numba_locator.process_chromosome(
-                    chrom_name,
-                    sequence
-                )
-
-                chrom_stats = stats_engine.run_proportion_test(chrom_stats)
-
-                csv_writer.append_csv(
-                    stats=chrom_stats,
-                    fasta_file=genome.name,
-                    chrom_name=chrom_name
-                )
-
+            csv_writer.append_csv(
+                stats=chrom_stats,
+                fasta_file=genome.name,
+                chrom_name=chrom_name
+            )
 
     sys.stdout.write("""
     Program executed successfully.

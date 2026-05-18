@@ -82,7 +82,11 @@ class Statistics:
 
             genome_length = chrom_stats["genome_length"]
 
-            for strand in ["forward", "reverse"]:
+            for strand in ("forward", "reverse"):
+
+                if strand not in chrom_stats:
+                    continue
+                
                 base_probs = chrom_stats[strand]["base_probs"]
 
                 for motif, data in chrom_stats[strand]["proportion_test"].items():
