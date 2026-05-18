@@ -22,7 +22,8 @@ class Sequences:
 class Enzymes:
     def __init__(self, motif_file: str) -> None:
         self.motif_file = motif_file
-        self.enzyme_info = {}
+        self.short_enzyme_info = {}
+        self.long_enzyme_info = {}
 
     def collect_motifs(self) -> dict:
         with open(self.motif_file, "r", newline="") as f:
@@ -30,13 +31,19 @@ class Enzymes:
 
             for row in reader:
                 motif = row["motif_sequence"].strip()
-
-                self.enzyme_info[motif] = {
-                    "motif_sequence": row["motif_sequence"],
-                    "enzyme": row["enzyme"].strip(),
-                    "organism": row["organism"].strip()
-                }
-        return self.enzyme_info
+                if len(motif) <= 4:
+                    self.short_enzyme_info[motif] = {
+                        "motif_sequence": row["motif_sequence"],
+                        "enzyme": row["enzyme"].strip(),
+                        "organism": row["organism"].strip()
+                    }
+                else:
+                    self.long_enzyme_info[motif] = {
+                        "motif_sequence": row["motif_sequence"],
+                        "enzyme": row["enzyme"].strip(),
+                        "organism": row["organism"].strip()
+                    }
+        return self.short_enzyme_info, self.long_enzyme_info
 
 
 

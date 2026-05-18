@@ -9,7 +9,8 @@ from src.file_reader.reader import Sequences
 from src.file_reader.reader import Enzymes
 
 # Motif locating
-from src.motif_locator.locator import Motifs
+from src.motif_locator.numpy_locator import Numpy_Motif_Search
+from src.motif_locator.numba_locator import Numba_Motif_Search
 
 # Statistical analysis
 from src.statistic_analysis.statistics import Statistics
@@ -39,6 +40,10 @@ def parse_args() -> argparse.Namespace:
     file_parser.add_argument("-m", "--motif_file", 
                             type=Path, required=True,
                             help="CSV file containing the motif information.")
+    
+    # file_parser.add_argument("-s", "--strand_to_search",
+    #                          type=str, required=True,
+    #                          help="Distinguish which strand to investigate. Options are 'forward', 'reverse', or 'both'.")
     
     return file_parser.parse_args()
 
@@ -126,12 +131,13 @@ def main() -> int:
     # print(genome_files)
 
     motifs = Enzymes(args.motif_file)
-    motif_info = motifs.collect_motifs()
-    # print(motif_info)
+    short_motifs, long_motifs = motifs.collect_motifs()
+    # print(short_motifs)
+    # print(long_motifs)
 
 
     #==================================
-    # MOTIF LOCATION
+    # MOTIF LOCATION AND STATISTICS
     #==================================
     # Initialize the CSV output file
     csv_writer = CSVWriter(Path(args.csv_output))
@@ -140,24 +146,45 @@ def main() -> int:
     # Initialize the statistics class
     stats_engine = Statistics()
 
-    # Search for motifs in each genome
-    motif_locator = Motifs(motif_info, genome_files)
+    # Search for motifs in each genome. If the motif length is less than or equal to 4 bases then the sliding window method is used. Otherwise, numba is used.
+
+    # Initialize engines once
+    numpy_locator = Numpy_Motif_Search(short_motifs, genome_files)
+    numba_locator = Numba_Motif_Search(long_motifs, genome_files)
 
     for genome in genome_files:
         print(f"\nProcessing {genome}")
-        for chrom_name, sequence in motif_locator.stream_fasta(genome):
+
+        for chrom_name, sequence in numpy_locator.stream_fasta(genome):
             print(f"\tProcessing chromosome {chrom_name}")
-            chrom_stats = motif_locator.process_chromosome(chrom_name, sequence)
-            # Calculate the stats per genome
-            chrom_stats = stats_engine.run_proportion_test(chrom_stats)
 
-            # Write the results to the CSV output file
-            csv_writer.append_csv(
-                stats=chrom_stats,
-                fasta_file=genome.name,
-                chrom_name=chrom_name
-            )
+            if short_motifs:
+                chrom_stats = numpy_locator.process_chromosome(
+                    chrom_name,
+                    sequence
+                )
 
+                chrom_stats = stats_engine.run_proportion_test(chrom_stats)
+
+                csv_writer.append_csv(
+                    stats=chrom_stats,
+                    fasta_file=genome.name,
+                    chrom_name=chrom_name
+                )
+
+            if long_motifs:
+                chrom_stats = numba_locator.process_chromosome(
+                    chrom_name,
+                    sequence
+                )
+
+                chrom_stats = stats_engine.run_proportion_test(chrom_stats)
+
+                csv_writer.append_csv(
+                    stats=chrom_stats,
+                    fasta_file=genome.name,
+                    chrom_name=chrom_name
+                )
 
 
     sys.stdout.write("""
@@ -171,23 +198,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
-
-
-
-
-# # 💡 What I would optimize first (highest impact)
-
-# 1. Replace sliding windows with rolling hash or byte-masked scan
-# 2. Avoid materializing full window arrays
-# 3. Precompute genome once as uint8
-# 4. Fuse motif checks where possible
-# 5. Consider chunked scanning instead of full-genome window matrix
-
-# ---
-
-# If you want next step, I can:
-# - pinpoint exactly where the 1.4GB is being created in your code
-# - or redesign your motif search to be **streaming (O(1) memory)** while keeping NumPy speed
-# - or benchmark your old vs new implementation side-by-side
-
-# Just tell me.
