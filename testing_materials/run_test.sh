@@ -1,18 +1,17 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-thresholds=(0.25 0.50 0.75 0.90)
+# Test 1
+echo "This is a test run of the program that searches cattle genomes for the NGG motif of SpCas9 from Streptococcus pyogenes." 
 
-for t in "${thresholds[@]}" ; do
-    echo -e "\nRunning threshold: $t"
-    python3 main.py \
-        -i example_data/blast_files/ \
-        -c example_data/Binsularis_contig_sizes.txt \
-        -p example_data/prioritization.tsv \
-        --summary_stats_file example_runs/${t}/${t}_summary_stats.tsv \
-        --contigs_barplot example_runs/${t}/${t}_contigs_barplot.png \
-        --bps_barplot example_runs/${t}/${t}_bps_barplot.png \
-        --data_frame_file example_runs/${t}/${t}_data_frame.tsv \
-        -t $t
-done
+python3 main.py \
+    -f testing_materials/example_data/cattle \
+    -m testing_materials/example_data/motif.csv \
+    -c testing_materials/example_outputs/cattle_test.csv
 
-echo -e "\nAll runs completed."
+# Test 2
+# echo "This is a test run of th eprogram that searches a prokaryotic genome for the _________ motif of ________ from __________."
+
+# python3 main.py \
+#     -f testing_materials/example_data/cattle \
+#     -m testing_materials/example_data/motif.csv \
+#     -c testing_materials/example_outputs/cattle_test.csv

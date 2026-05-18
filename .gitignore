@@ -9,8 +9,9 @@ src/motif_locator/__pycache__
 src/statistic_analysis/__pycache__
 *pyc
 
-# Output
+# Outputs
 output/*
+testing_materials/example_outputs/*
 
 # Data
 data/*

@@ -11,6 +11,11 @@ from src.file_reader.reader import Enzymes
 # Motif locating
 from src.motif_locator.locator import Motifs
 
+# Statistical analysis
+from src.statistic_analysis.statistics import Statistics
+
+# CSV output
+from src.csv_output.output import CSVWriter
 
 def parse_args() -> argparse.Namespace:
     """
@@ -126,10 +131,32 @@ def main() -> int:
 
 
     #==================================
-    # MOTIF LOCATOR
+    # MOTIF LOCATION
     #==================================
-    motif_location_results = Motifs(motif_info, genomes)
-    print(motif_location_results)
+    # Initialize the CSV output file
+    csv_writer = CSVWriter(Path(args.csv_output))
+    csv_writer.create_csv_file()
+
+    # Initialize the statistics class
+    stats_engine = Statistics()
+
+    # Search for motifs in each genome
+    motif_locator = Motifs(motif_info, genome_files)
+
+    for genome in genome_files:
+        print(f"\nProcessing {genome}")
+        for chrom_name, sequence in motif_locator.stream_fasta(genome):
+            print(f"\tProcessing chromosome {chrom_name}")
+            chrom_stats = motif_locator.process_chromosome(chrom_name, sequence)
+            # Calculate the stats per genome
+            chrom_stats = stats_engine.run_proportion_test(chrom_stats)
+
+            # Write the results to the CSV output file
+            csv_writer.append_csv(
+                stats=chrom_stats,
+                fasta_file=genome.name,
+                chrom_name=chrom_name
+            )
 
 
 
@@ -144,3 +171,23 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+
+
+
+
+# # 💡 What I would optimize first (highest impact)
+
+# 1. Replace sliding windows with rolling hash or byte-masked scan
+# 2. Avoid materializing full window arrays
+# 3. Precompute genome once as uint8
+# 4. Fuse motif checks where possible
+# 5. Consider chunked scanning instead of full-genome window matrix
+
+# ---
+
+# If you want next step, I can:
+# - pinpoint exactly where the 1.4GB is being created in your code
+# - or redesign your motif search to be **streaming (O(1) memory)** while keeping NumPy speed
+# - or benchmark your old vs new implementation side-by-side
+
+# Just tell me.
