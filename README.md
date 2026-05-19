@@ -52,13 +52,15 @@ Review `LICENSE` for details.
 ```
 
 ## Overview
-`example_data`: Contains the example genome FASTA files and example format of motif information CSV files.
+`data/`: Contains the example genome FASTA files and example format of motif information CSV files.
 
-`src`: Contains multiple subdirectories leading to modules handling the input and output data. 
-1. `file_reader` contains module `reader.py` which collects all the provided FASTA files and motifs to search from the provided motif CSV file.
-2. `motif_locator` contains module `locator.py` which searches for all motif instances in the FASTA files using the Aho-Corasick algorithm. Results are passed onto the `statistics.py` for further analysis in the form of a dictionary.
-3. `statistic_analysis` contain module `statistics.py` which performs a one-sided proportion tests on motif occurrences per strand and per FASTA file as provided from the `locator.py` findings. Statistical and locator results are saved into a dictionary and passed onto `output.py`.
-4. `csv_output`contains module `output.py` which generates a CSV file for the overall results with the following information:
+`output/`: Contains the generated CSV output files from running the program.
+
+`src/`: Contains multiple subdirectories leading to modules handling the input and output data. 
+1. `file_reader/` contains module `reader.py` which collects all the provided FASTA files and motifs to search from the provided motif CSV file.
+2. `motif_locator/` contains module `locator.py` which searches for all motif instances in the FASTA files using the Aho-Corasick algorithm. Results are passed onto the `statistics.py` for further analysis in the form of a dictionary.
+3. `statistic_analysis/` contain module `statistics.py` which performs a one-sided proportion tests on motif occurrences per strand and per FASTA file as provided from the `locator.py` findings. Statistical and locator results are saved into a dictionary and passed onto `output.py`.
+4. `csv_output/`contains module `output.py` which generates a CSV file for the overall results with the following information:
     - FASTA Organism
     - FASTA File
     - Strand Searched ('forward' or 'reverse')
@@ -80,9 +82,15 @@ Review `LICENSE` for details.
 
 `run_test.sh`: Bash script that executes multiple test runs at different coverage threshold values for the user.
 
-`example_runs`: Contains output file directories for different coverage threshold values when `run_test.sh` is executed.
+`testing_materials/example_runs/`: Contains output CSV files for different parameters and data when a `run_test_X.sh` is executed.
 
-`dependencies.txt`: contains all the neccesary packages for program to execute. 
+`testing_materials/expected_example_runs/`: Contains the expected CSV output files for each `run_test_X.sh`.
+
+`environment.yml`: Contains the full Conda environment specification, including Python version, required packages, dependency versions, and channels.
+
+`dependencies.txt`: Contains all the neccesary packages for program to execute. 
+
+`LICENSE`: Contains the full text of the GNU General Public License v3.0, which defines the terms under which the software may be used, modified, and redistributed.
 
 ## Program Instructions
 
@@ -104,12 +112,25 @@ conda env create -f environment.yml
 ```bash
 conda activate motif_analyzer
 ```
-2. Run following command to test:
+2. Run any or all of the following commands to test the program:
 ```bash
-testing_materials/run_test.sh
+testing_materials/run_test_1.sh
+testing_materials/run_test_2.sh
+testing_materials/run_test_3.sh
+testing_materials/run_test_4.sh
 ```
-3. Example single-line terminal command to execute the program:
+3. Results from `testing_materials/run_test_X.sh` can be found in `testing_materials/example_outputs/`. The generated test output CSV files can be compared to the expected results in `testing_materials/expected_example_outputs/`.
+
+4. To run the program with specific data, place the FASTA files in a sub-directory of `data/` and place the motif information CSV file into `data/`. **Please refer to `testing_materials/example_data/` for the required format of motif information CSV files.** The following is an example of all provided files in the `data/`:
 ```
+└── 📁Genome_Motif_Analyzer
+    └── 📁data
+        └── 📁cattle
+        ├── sa_motifs.csv
+```
+
+5. Following the example in 4, the program can then be run as the following single-line command:
+```bash
 ./main.py -f data/cattle/ -m data/sa_motif.csv -c output/20260520_sa_results.csv -s forward
 ```
 
@@ -123,9 +144,9 @@ testing_materials/run_test.sh
 
 ### Expected Output:
 
-- Runs the program with multiple coverage thresholds. 
-- Prints output locations of each example run.
-- Prints completion statement upon successful execution of all runs. 
+- Searches the provided FASTA file(s) with the provided motif sequence(s).
+- Performs a one-sided proportion test per motif per strand of the provided FASTA file(s).
+- Results saved to a CSV file.
 
 ## References
 
@@ -144,6 +165,14 @@ Python Software Foundation. (n.d.). *collections — Container datatypes. Python
 https://docs.python.org/3/library/collections.html#collections.Counter
 
 Used for counting hashable objects, producing frequency distributions, and efficiently aggregating occurrences in iterable data.
+
+---
+
+**`collections.defaultdict`**    
+Python Software Foundation. (n.d.). *collections — Container datatypes. Python 3 Documentation*.
+https://docs.python.org/3/library/collections.html#collections.defaultdict
+
+Used for dictionary-like objects that automatically initialize missing keys with a default factory function (e.g., lists, integers, sets), commonly used to simplify grouping and aggregation logic without needing explicit key existence checks.
 
 ---
 
@@ -232,4 +261,3 @@ ChatGPT assisted with:
 - Debugging and code review
 
 All generated code was reviewed and tested by the author.
-
