@@ -1,49 +1,80 @@
 # Genom Motif Analyzer
 > Please use the latest stable release. Download here: [Latest Release URL](hhttps://github.com/bluker17/Genome_Motif_Analyzer/releases/latest)
 
-## Author:
-**Bobby Luker**
-rluker@charlotte.edu
+## Author
+**Bobby Luker**    
+rluker@charlotte.edu    
 UNCC ID: 801484356
 
-## Program Description:
+## Program Description
 
 For a draft genome assembly, when given multiple BLAST result TSV files and a contig TXT file containing contig IDs and lengths, the contigs are filtered by bin priority, bitscore, coverage threshold, and contig size threshold. Summary statistics are generated for each bin, along with two bar plots showing the number of contigs per bin and the total base pairs per bin. The default coverage threshold is set to 0.9 to ensure that only the highest-quality contigs are used. However, the user can adjust the coverage threshold to relax this restriction if needed.
 
 
 [Github Project URL](https://github.com/bluker17/Genome_Motif_Analyzer)
 
-## License: 
-**MIT License**
+## License
+**GNU General Public License v3.0**
 
-Review `License` for details.
+Review `LICENSE` for details.
 
 ## Project File Structure:
-***envrionment.yml files need to be created***
 ```
-└── 📁testing_materials
-    └── 📁example_data
-        ├── data.txt
-    └── 📁example_outputs
-        ├── test_output.txt
-    ├── run_test.sh
-└── 📁output
-    ├── output.txt
-└── 📁src
-├── environment-alternative.yml
-├── environment.yml
-├── LICENSE
-├── main.py
-├── README.md
-├── dependencies.txt
+└── 📁Genome_Motif_Analyzer
+    └── 📁data
+    └── 📁output
+    └── 📁src
+        └── 📁csv_output
+            ├── __init__.py
+            ├── output.py
+        └── 📁file_reader
+            ├── __init__.py
+            ├── reader.py
+        └── 📁motif_locator
+            ├── __init__.py
+            ├── locator.py
+        └── 📁statistic_analysis
+            ├── __init__.py
+            ├── statistics.py
+    └── 📁testing_materials
+        └── 📁example_data
+        └── 📁example_outputs
+        └── 📁expected_example_outputs
+        ├── run_test_1.sh
+        ├── run_test_2.sh
+        ├── run_test_3.sh
+        ├── run_test_4.sh
+    ├── dependencies.txt
+    ├── environment.yml
+    ├── LICENSE
+    ├── main.py
+    └── README.md
 ```
 
-## Overview:
-`example_data`: Contains the example BLAST result TSV files and the contig size TXT file.
+## Overview
+`example_data`: Contains the example genome FASTA files and example format of motif information CSV files.
 
 `src`: Contains multiple subdirectories leading to modules handling the input and output data. 
-1. `reader` contains module `read_files.py` which reads in the BLAST result TSV files and contig size TXT file to merge all files into one main data frame for further analysis.
-2. `prioritization` contains module `priority.py` which adds a bin column to the data frame. The data frame is then filtered by the highest priority bin and bitscore for each contig id. 
+1. `file_reader` contains module `reader.py` which collects all the provided FASTA files and motifs to search from the provided motif CSV file.
+2. `motif_locator` contains module `locator.py` which searches for all motif instances in the FASTA files using the Aho-Corasick algorithm. Results are passed onto the `statistics.py` for further analysis in the form of a dictionary.
+3. `statistic_analysis` contain module `statistics.py` which performs a one-sided proportion tests on motif occurrences per strand and per FASTA file as provided from the `locator.py` findings. Statistical and locator results are saved into a dictionary and passed onto `output.py`.
+4. `csv_output`contains module `output.py` which generates a CSV file for the overall results with the following information:
+    - FASTA Organism
+    - FASTA File
+    - Strand Searched ('forward' or 'reverse')
+    - Motif Enzyme Name
+    - Enzyme Source Organism
+    - Motif Sequence
+    - Significance ('+' for significant, '-' for non-significant, 0 for failed test)
+    - p-value (per FASTA file)
+    - z-stat (per FASTA file)
+    - Observed Motif Count
+    - Possible Motif Positions Count
+    - Expected Motif Matches Count
+    - Expected Motif Probability
+    - Genome Length
+    - Genome GC Content
+    - Observed Genome Base Probabilities (A, C, G, T)
 
 `main.py` executes all modules to produce results. 
 
@@ -53,7 +84,7 @@ Review `License` for details.
 
 `dependencies.txt`: contains all the neccesary packages for program to execute. 
 
-## Program Instructions:
+## Program Instructions
 
 ### Installation
 
@@ -82,23 +113,21 @@ testing_materials/run_test.sh
 ./main.py -f data/cattle/ -m data/sa_motif.csv -c output/20260520_sa_results.csv -s forward
 ```
 
-#### Command-Line Arguments:
-| Argument                          | Description                                  | Default               |
-| --------------------------------- | -------------------------------------------- | --------------------- |
-| `-p`, `--priority_file` | TSV file containing bins and priority. 'Bin' corresponds to files assigned to contigs. 'priority' corresponds to numerical priority classification for each bin. The lowest numerical value roeesponds to the highest priority bin.                           | example_data/prioritization.tsv|
-| `--coverage_threshold` | Coverage threshold float. Used to filter out contigs less than the threshold.                           | 0.9|
-| `--contig_size_threshold` | Coverage threshold int. Used to filter out contigs less than a specific bp size.                           | 3000|
+### Command-Line Arguments
+| Argument  | Description |
+| --- | --- |
+| -c, --csv_output | Output CSV file path and filename |
+| -f, --fasta_files | Directory containing FASTA files. |
+| -m, --motif_file | CSV file containing motif information. |
+| -s, --strand_to_search | Strand to search for motifs. Options: forward, reverse, or both. |
 
-
-
-
-Expected Output:
+### Expected Output:
 
 - Runs the program with multiple coverage thresholds. 
 - Prints output locations of each example run.
 - Prints completion statement upon successful execution of all runs. 
 
-## References:
+## References
 
 ### Python Standard Library
 
@@ -193,7 +222,7 @@ The `IUPAC` dictionary maps ambiguity codes (R, Y, S, W, K, M, B, D, H, V, N) to
 
 ---
 
-### AI assistance:
+### AI assistance
 
 This project was developed with the help of [ChatGPT-5.5](https://chatgpt.com) (`chatgpt-5.5`) by [OpenAI](https://openai.com).
 
