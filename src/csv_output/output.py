@@ -4,7 +4,6 @@
 import csv
 from pathlib import Path
 
-
 class CSVWriter:
     """
     Handles initialization and incremental writing of motif analysis results to a CSV file.

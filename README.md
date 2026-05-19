@@ -1,5 +1,5 @@
-# Program Title
-> Please use the latest stable release. Download here: [Latest Release URL](https://github.com/bluker17/Grid_Overlay/releases/latest)
+# Genom Motif Analyzer
+> Please use the latest stable release. Download here: [Latest Release URL](hhttps://github.com/bluker17/Genome_Motif_Analyzer/releases/latest)
 
 ## Author:
 **Bobby Luker**
@@ -11,7 +11,7 @@ UNCC ID: 801484356
 For a draft genome assembly, when given multiple BLAST result TSV files and a contig TXT file containing contig IDs and lengths, the contigs are filtered by bin priority, bitscore, coverage threshold, and contig size threshold. Summary statistics are generated for each bin, along with two bar plots showing the number of contigs per bin and the total base pairs per bin. The default coverage threshold is set to 0.9 to ensure that only the highest-quality contigs are used. However, the user can adjust the coverage threshold to relax this restriction if needed.
 
 
-[Github Project URL](https://github.com/bluker17/Template_repository)
+[Github Project URL](https://github.com/bluker17/Genome_Motif_Analyzer)
 
 ## License: 
 **MIT License**
@@ -51,7 +51,7 @@ Review `License` for details.
 
 `example_runs`: Contains output file directories for different coverage threshold values when `run_test.sh` is executed.
 
-`dependencies.txt`: contains all the neccesary packages for proram to execute. 
+`dependencies.txt`: contains all the neccesary packages for program to execute. 
 
 ## Program Instructions:
 
@@ -59,10 +59,10 @@ Review `License` for details.
 
 1. Download the latest release or clone the repository:
 ```bash
-git clone https://github.com/bluker17/Grid_Overlay.git
+git clone https://github.com/bluker17/Genome_Motif_Analyzer.git
 ```
 
-2. Create the conda environment. Conda will automatically create an environment named `grid-app` with all the specified packages and versions.
+2. Create the conda environment. Conda will automatically create an environment named `motif_analyzer` with all the specified packages and versions required to run the program.
 ```bash
 conda env create -f environment.yml
 ```
@@ -71,15 +71,15 @@ conda env create -f environment.yml
 
 1. Activate the environment:
 ```bash
-conda activate env_name_to_be_created
+conda activate motif_analyzer
 ```
 2. Run following command to test:
 ```bash
-bash testing_materials/run_test.sh
+testing_materials/run_test.sh
 ```
 3. Example single-line terminal command to execute the program:
 ```
-python3 main.py -p data/data.txt --coverage_threshold 0.75 --contig_size_threshold 1000
+./main.py -f data/cattle/ -m data/sa_motif.csv -c output/20260520_sa_results.csv -s forward
 ```
 
 #### Command-Line Arguments:
@@ -98,23 +98,43 @@ Expected Output:
 - Prints output locations of each example run.
 - Prints completion statement upon successful execution of all runs. 
 
-
-## Contributions (if there are multiple authors)
-
-
 ## References:
 
 ### Python Standard Library
 
-**`argparse`**  
-Python Software Foundation. (2024). *argparse — Parser for command-line options, arguments and sub-commands*. Python 3 Documentation.  
-https://docs.python.org/3/library/argparse.html  
+**`argparse`**    
+Python Software Foundation. (2024). *argparse — Parser for command-line options, arguments and sub-commands*. Python 3 Documentation.
+https://docs.python.org/3/library/argparse.html
 
 Used for parsing command-line arguments and handling CLI input configuration.
 
 ---
 
-**`pathlib`**  
+**`collections.Counter`**    
+Python Software Foundation. (n.d.). *collections — Container datatypes. Python 3 Documentation*.
+https://docs.python.org/3/library/collections.html#collections.Counter
+
+Used for counting hashable objects, producing frequency distributions, and efficiently aggregating occurrences in iterable data.
+
+---
+
+**`csv`**    
+Python Software Foundation. (n.d.). *csv — CSV File Reading and Writing*. Python 3 Documentation.
+https://docs.python.org/3/library/csv.html
+
+Used for reading and writing tabular data in Comma-Separated Values (CSV) format, supporting parsing, dialect handling, and data serialization.
+
+---
+
+**`math`**    
+Python Software Foundation. (n.d.). math — Mathematical functions. Python 3 Documentation.
+https://docs.python.org/3/library/math.html
+
+Used for mathematical operations such as trigonometry, logarithms, exponentials, rounding, combinatorics, and numeric constants like π and e.
+
+---
+
+**`pathlib`**    
 Python Software Foundation. (2024). *pathlib — Object-oriented filesystem paths*. Python 3 Documentation.  
 https://docs.python.org/3/library/pathlib.html  
 
@@ -122,96 +142,56 @@ Used for platform-independent file and directory path handling.
 
 ---
 
-**`sys`**  
-Python Software Foundation. (2024). *sys — System-specific parameters and functions*. Python 3 Documentation.  
-https://docs.python.org/3/library/sys.html  
+**`sys`**    
+Python Software Foundation. (2024). *sys — System-specific parameters and functions*. Python 3 Documentation.
+https://docs.python.org/3/library/sys.html
 
 Used for interacting with interpreter-level functionality such as command-line arguments and program exit handling.
 
+---
+
+**`typing`**    
+Python Software Foundation. (n.d.). *typing — Support for type hints. Python 3 Documentation*.
+https://docs.python.org/3/library/typing.html
+
+Used for type annotations, including generics, unions, optional types, and static type checking support in Python code.
+
+---
+
 ### Third-Party Libraries
-#### Pillow (PIL)
 
-**`Pillow`**  
-Pillow Contributors. (n.d.). *Pillow (PIL Fork) documentation*. Pillow Documentation.  
-https://pillow.readthedocs.io/en/stable/  
+**`Biopython`**    
+Cock, P. J. A., Antao, T., Chang, J. T., et al. (2009). *Biopython: freely available Python tools for computational molecular biology and bioinformatics*. Bioinformatics, 25(11), 1422–1423.
+https://biopython.org/
 
-Used for image loading, manipulation, drawing operations, colour handling, and alpha compositing.
-
----
-
-**`ImageColor`**  
-Pillow Contributors. (n.d.). *ImageColor module*. Pillow Documentation.  
-https://pillow.readthedocs.io/en/stable/reference/ImageColor.html  
-
-Used for parsing and converting colour specifications into RGB values.
+Used for file parsing (FASTA/GenBank),
 
 ---
 
-**`ImageColor.getrgb`**  
-Pillow Contributors. (n.d.). *PIL.ImageColor.getrgb*. Pillow Documentation.  
-https://pillow.readthedocs.io/en/stable/reference/ImageColor.html#PIL.ImageColor.getrgb  
+**`pyahocorasick`**    
+Appier Ltd. (n.d.). *pyahocorasick documentation*.
+https://pyahocorasick.readthedocs.io/en/latest/
 
-Used to convert colour strings and hexadecimal colour codes into RGB tuples.
-
----
-
-**`Image.open`**  
-Pillow Contributors. (n.d.). *PIL.Image.open*. Pillow Documentation.  
-https://pillow.readthedocs.io/en/stable/reference/Image.html#PIL.Image.open  
-
-Used to load and open image files for processing.
+Used for efficient multi-pattern string matching using the Aho–Corasick algorithm, applied to motif searching.
 
 ---
 
-**`Image.convert`**  
-Pillow Contributors. (n.d.). *PIL.Image.Image.convert*. Pillow Documentation.  
-https://pillow.readthedocs.io/en/stable/reference/Image.html#PIL.Image.Image.convert  
+**`statsmodels`**    
+Seabold, S., & Perktold, J. (2010). *Statsmodels: Econometric and statistical modeling with Python*. Proceedings of the 9th Python in Science Conference.
+https://www.statsmodels.org/stable/
 
-Used to convert images between colour modes (e.g., RGB, RGBA, grayscale).
-
----
-
-**`Image.new`**  
-Pillow Contributors. (n.d.). *PIL.Image.new*. Pillow Documentation.  
-https://pillow.readthedocs.io/en/stable/reference/Image.html#PIL.Image.new  
-
-Used to create new blank image canvases with specified dimensions and colour modes.
+Used for 
 
 ---
-
-**`ImageDraw.Draw`**  
-Pillow Contributors. (n.d.). *PIL.ImageDraw.Draw*. Pillow Documentation.  
-https://pillow.readthedocs.io/en/stable/reference/ImageDraw.html#PIL.ImageDraw.Draw  
-
-Used to create drawable image contexts for rendering shapes, lines, and annotations.
-
----
-
-**`Image.alpha_composite`**  
-Pillow Contributors. (n.d.). *PIL.Image.alpha_composite*. Pillow Documentation.  
-https://pillow.readthedocs.io/en/stable/reference/Image.html#PIL.Image.alpha_composite  
-
-Used to combine RGBA images using alpha-channel compositing.
 
 ### Bioinformatics Concepts & Standards
 
-**IUPAC Nucleotide Ambiguity Codes**
+**IUPAC Nucleotide Ambiguity Codes**    
 Nomenclature Committee of the International Union of Biochemistry (NC-IUB). (1985). Nomenclature for incompletely specified bases in nucleic acid sequences. *European Journal of Biochemistry*, 150(1), 1–5.
 https://doi.org/10.1111/j.1432-1033.1985.tb08977.x
 The `IUPAC` dictionary maps ambiguity codes (R, Y, S, W, K, M, B, D, H, V, N) to their corresponding regex character classes for motif matching.
- 
-**Restriction Enzyme Cut Notation**
-Rebase - The Restriction Enzyme Database. Roberts, R. J., Vincze, T., Posfai, J., & Macelis, D. (2023). REBASE: a database for DNA restriction and modification: enzymes, genes and genomes. *Nucleic Acids Research*, 51(D1), D629–D630.
-https://doi.org/10.1093/nar/gkac975
-https://rebase.neb.com/
-The `^` (top-strand cut) and `_` (bottom-strand cut) notation parsed by `_top_cut_offset()` and `_bot_cut_offset()` follows the REBASE convention for describing staggered and blunt restriction enzyme cleavage sites.
- 
-**DNA Complementarity**
-Watson, J. D., & Crick, F. H. C. (1953). Molecular structure of nucleic acids: A structure for deoxyribose nucleic acid. *Nature*, 171, 737–738.
-https://doi.org/10.1038/171737a0
-The `COMPLEMENT` dictionary (A↔T, G↔C) used to generate the bottom strand in `DoubleStrandedMap` is based on Watson–Crick base-pairing rules.
 
-
+---
 
 ### AI assistance:
 

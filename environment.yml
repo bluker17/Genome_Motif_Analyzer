@@ -1,0 +1,10 @@
+name: motif_analyzer
+channels:
+- conda-forge
+dependencies:
+- biopython
+- numpy
+- pyahocorasick
+- python=3.11
+- statsmodels
+
