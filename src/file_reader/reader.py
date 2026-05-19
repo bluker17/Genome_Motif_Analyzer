@@ -5,6 +5,7 @@ import csv
 from pathlib import Path
 from typing import List
 from collections import defaultdict
+from src.macromolecule_alphabet.alphabet import Alphabet
 
 class Sequences:
     def __init__(self, fasta_dir: Path) -> None:
@@ -19,13 +20,14 @@ class Sequences:
         return self.fasta_files
 
 class Enzymes:
-    def __init__(self, motif_file: Path) -> None:
+    def __init__(self, motif_file: Path, alphabet: Alphabet) -> None:
         self.motif_file = motif_file
         self.enzyme_info = defaultdict(list)
+        self.alphabet = alphabet
 
     def invalid_motif_chars(self, motif: str) -> set:
-        valid_bases = set("ACGTRYSWKMBDHVN")
-        return set(motif) - valid_bases
+        valid_bases = self.alphabet.degenerate_map.keys()
+        return set(motif) - set(valid_bases)
 
     def collect_motifs(self) -> dict:
         with open(self.motif_file, "r", newline="") as mf:

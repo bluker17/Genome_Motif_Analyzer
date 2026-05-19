@@ -1,4 +1,4 @@
-# Genom Motif Analyzer
+# Genome Motif Analyzer
 > Please use the latest stable release. Download here: [Latest Release URL](hhttps://github.com/bluker17/Genome_Motif_Analyzer/releases/latest)
 
 ## Author
@@ -8,8 +8,9 @@ UNCC ID: 801484356
 
 ## Program Description
 
-For a draft genome assembly, when given multiple BLAST result TSV files and a contig TXT file containing contig IDs and lengths, the contigs are filtered by bin priority, bitscore, coverage threshold, and contig size threshold. Summary statistics are generated for each bin, along with two bar plots showing the number of contigs per bin and the total base pairs per bin. The default coverage threshold is set to 0.9 to ensure that only the highest-quality contigs are used. However, the user can adjust the coverage threshold to relax this restriction if needed.
+From user provided DNA or RNA FASTA file(s) and a motif information CSV file, the program counts all motif instances within the FASTA file(s) using the Aho-Corasick method. One-sided proportion tests are then performed per motif per genome to determine motif enrichment or depletion. These results can reveal evolutionary genetic changes in an organism over time. The results are saved to a CSV containing motif information, FASTA file information, base probabilities of a FASTA file, and statistic values used to perform the one-sided proportion test.
 
+The program handles eukaryotic and prokaryotic FASTA files. When running the program with a eukaryotic organism, the motif search and statisic calculations are performed per chromosome.
 
 [Github Project URL](https://github.com/bluker17/Genome_Motif_Analyzer)
 
@@ -61,15 +62,15 @@ Review `LICENSE` for details.
 2. `motif_locator/` contains module `locator.py` which searches for all motif instances in the FASTA files using the Aho-Corasick algorithm. Results are passed onto the `statistics.py` for further analysis in the form of a dictionary.
 3. `statistic_analysis/` contain module `statistics.py` which performs a one-sided proportion tests on motif occurrences per strand and per FASTA file as provided from the `locator.py` findings. Statistical and locator results are saved into a dictionary and passed onto `output.py`.
 4. `csv_output/`contains module `output.py` which generates a CSV file for the overall results with the following information:
-    - FASTA Organism
+    - FASTA Organism (genetic entry in FASTA file)
     - FASTA File
     - Strand Searched ('forward' or 'reverse')
     - Motif Enzyme Name
     - Enzyme Source Organism
     - Motif Sequence
-    - Significance ('+' for significant, '-' for non-significant, 0 for failed test)
-    - p-value (per FASTA file)
-    - z-stat (per FASTA file)
+    - Significance ('+' for observing signficantly more motifs than expected, '-' for observing significanty less motifs than expected, 0 no signifcant difference of motifs from expected)
+    - p-value (per genetic entry in FASTA file)
+    - z-stat (per genetic entry in FASTA file)
     - Observed Motif Count
     - Possible Motif Positions Count
     - Expected Motif Matches Count

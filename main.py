@@ -4,6 +4,9 @@
 import argparse, sys
 from pathlib import Path
 
+# Alphabet Initialization
+from src.macromolecule_alphabet.alphabet import ALPHABETS
+
 # File handling
 from src.file_reader.reader import Sequences
 from src.file_reader.reader import Enzymes
@@ -44,6 +47,11 @@ def parse_args() -> argparse.Namespace:
                              type=str, required=True,
                              choices=["forward", "reverse", "both"],
                              help="Distinguishes which strand to investigate. Options are 'forward', 'reverse', or 'both'.")
+    
+    file_parser.add_argument("--macromolecule",
+                             type=str, required=True,
+                             choices=["DNA", "RNA"],
+                             help="Distinguishes which macromolecule is provided in the FASTA directory to parse. Options are 'DNA', or 'RNA'. Only one option can be present in the FASTA directory.")
     
     return file_parser.parse_args()
 
@@ -114,16 +122,22 @@ def main() -> int:
 
     sys.stdout.write("""
     Arguments received:
-        Directory containing FASTA files: {fasta_files}
+        Directory containing FASTA file(s): {fasta_files}
+        Macromolecule in FASTA file(s): {macromolecule}
+        Strand to investigate: {strand_to_search}
         Motif information CSV file: {motif_file}
         Output CSV file: {csv_output}
     """.format(
         fasta_files=args.fasta_files,
+        macromolecule = args.macromolecule,
+        strand_to_search = args.strand_to_search,
         motif_file=args.motif_file,
         csv_output=args.csv_output
     ))
 
     validate_args(args)
+
+    alphabet = ALPHABETS[args.macromolecule.upper()]
 
     #==================================
     # INPUT FILE HANDLING
@@ -132,7 +146,7 @@ def main() -> int:
     genome_files = genomes.collect_fasta_files()
     # print(genome_files)
 
-    motifs = Enzymes(args.motif_file)
+    motifs = Enzymes(args.motif_file, alphabet)
     short_motifs = motifs.collect_motifs()
 
 
@@ -140,14 +154,14 @@ def main() -> int:
     # MOTIF LOCATION AND STATISTICS
     #==================================
     # Initialize the CSV output file
-    csv_writer = CSVWriter(Path(args.csv_output))
+    csv_writer = CSVWriter(Path(args.csv_output), alphabet)
     csv_writer.create_csv_file()
 
     # Initialize the statistics class
-    stats_engine = Statistics()
+    stats_engine = Statistics(alphabet)
 
     # # Initialize engines once
-    ahocorasick = AhoCorasick_Motif_Search(short_motifs, genome_files, args.strand_to_search)
+    ahocorasick = AhoCorasick_Motif_Search(short_motifs, genome_files, args.strand_to_search, alphabet)
     for genome in genome_files:
         print(f"\nProcessing {genome}")
 
@@ -156,11 +170,7 @@ def main() -> int:
             chrom_stats = ahocorasick.process_chromosome(chrom_name, sequence)
             chrom_stats = stats_engine.run_proportion_test(chrom_stats)
 
-            csv_writer.append_csv(
-                stats=chrom_stats,
-                fasta_file=genome.name,
-                chrom_name=chrom_name
-            )
+            csv_writer.append_csv(chrom_stats, genome.name)
 
     sys.stdout.write("""
     Program executed successfully.

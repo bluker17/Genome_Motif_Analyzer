@@ -7,4 +7,5 @@ echo "This is a test run of the program that searches the forward and reverse st
     -f ./testing_materials/example_data/cattle \
     -m ./testing_materials/example_data/sa_motif.csv \
     -c ./testing_materials/example_outputs/cattle_sa_test.csv \
+    --macromolecule DNA \
     -s both
