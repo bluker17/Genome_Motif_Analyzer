@@ -7,12 +7,14 @@ testing_materials/example_outputs/*
 # Python
 src/motif_locator/__pycache__
 src/statistic_analysis/__pycache__
+src/csv_output/__pycache__
+src/file_reader/__pycache__
 *pyc
 
 # Outputs
 output/*
 testing_materials/example_outputs/*
-testing_materials/example_data/*
 
 # Data
 data/*
+testing_materials/example_data/cattle/*

@@ -103,9 +103,6 @@ def validate_args(args: argparse.Namespace):
     # Validate CSV output file
     output_path = Path(args.csv_output)
 
-    if not output_path.is_file():
-        raise FileNotFoundError("CSV output file must point to a file.")
-
     if output_path.suffix.lower() != ".csv":
         raise ValueError("CSV output file must have a .csv extension.")
 

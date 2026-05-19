@@ -3,8 +3,8 @@
 
 import csv
 from pathlib import Path
-from typing import Iterator, Tuple, List
-from Bio import SeqIO
+from typing import List
+
 
 class Sequences:
     def __init__(self, fasta_dir: Path) -> None:

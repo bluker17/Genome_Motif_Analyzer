@@ -1,4 +1,4 @@
 biopython
 numpy
-termcolor
-inquirer
+ahocorasick
+statsmodels

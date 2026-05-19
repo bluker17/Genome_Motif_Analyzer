@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from pathlib import Path
-from typing import Iterator, Dict, Tuple
+from typing import Iterator, Tuple
 from Bio import SeqIO
 import ahocorasick
 from collections import Counter
