@@ -4,15 +4,13 @@
 import argparse, sys
 from pathlib import Path
 
-# Alphabet Initialization
-from src.macromolecule_alphabet.alphabet import ALPHABETS
-
 # File handling
 from src.file_reader.reader import Sequences
 from src.file_reader.reader import Enzymes
 
 # Motif locating
-from src.motif_locator.locator import AhoCorasick_Motif_Search
+from src.motif_locator.numpy_locator import Numpy_Motif_Search
+from src.motif_locator.numba_locator import Numba_Motif_Search
 
 # Statistical analysis
 from src.statistic_analysis.statistics import Statistics
@@ -70,7 +68,7 @@ def validate_args(args: argparse.Namespace):
         If any of the arguments are invalid.
     """
 
-    # Validate FASTA directory
+# Validate FASTA directory
     fasta_dir = Path(args.fasta_files)
     valid_extensions = [".fasta", ".fa", ".fna", ".faa", ".fas", ".ffn", ".frn"]
 
@@ -135,9 +133,7 @@ def main() -> int:
         csv_output=args.csv_output
     ))
 
-    validate_args(args)
-
-    alphabet = ALPHABETS[args.macromolecule.upper()]
+    # validate_args(args)
 
     #==================================
     # INPUT FILE HANDLING
@@ -146,31 +142,47 @@ def main() -> int:
     genome_files = genomes.collect_fasta_files()
     # print(genome_files)
 
-    motifs = Enzymes(args.motif_file, alphabet)
-    short_motifs = motifs.collect_motifs()
+    motifs = Enzymes(args.motif_file)
+    short_motifs, long_motifs = motifs.collect_motifs()
+    # print(short_motifs)
+    # print(long_motifs)
 
 
     #==================================
     # MOTIF LOCATION AND STATISTICS
     #==================================
     # Initialize the CSV output file
-    csv_writer = CSVWriter(Path(args.csv_output), alphabet)
+    csv_writer = CSVWriter(Path(args.csv_output))
     csv_writer.create_csv_file()
 
     # Initialize the statistics class
-    stats_engine = Statistics(alphabet)
+    stats_engine = Statistics()
 
-    # # Initialize engines once
-    ahocorasick = AhoCorasick_Motif_Search(short_motifs, genome_files, args.strand_to_search, alphabet)
+    # Search for motifs in each genome. If the motif length is less than or equal to 4 bases then the sliding window method is used. Otherwise, numba is used.
+
+    # Initialize engines once
+    numpy_locator = Numpy_Motif_Search(short_motifs, genome_files)
+    numba_locator = Numba_Motif_Search(long_motifs, genome_files)
+
     for genome in genome_files:
         print(f"\nProcessing {genome}")
 
-        for chrom_name, sequence in ahocorasick.stream_fasta(genome):
-            # print(f"\tProcessing chromosome {chrom_name}")
-            chrom_stats = ahocorasick.process_chromosome(chrom_name, sequence)
-            chrom_stats = stats_engine.run_proportion_test(chrom_stats)
+        for chrom_name, sequence in numpy_locator.stream_fasta(genome):
+            #print(f"\tProcessing chromosome {chrom_name}")
 
-            csv_writer.append_csv(chrom_stats, genome.name)
+            if short_motifs:
+                chrom_stats = numpy_locator.process_chromosome(chrom_name, sequence)
+
+                chrom_stats = stats_engine.run_proportion_test(chrom_stats)
+
+                csv_writer.append_csv(stats=chrom_stats, fasta_file=genome.name, chrom_name=chrom_name)
+
+            if long_motifs:
+                chrom_stats = numba_locator.process_chromosome(chrom_name, sequence)
+
+                chrom_stats = stats_engine.run_proportion_test(chrom_stats)
+
+                csv_writer.append_csv(stats=chrom_stats, fasta_file=genome.name,chrom_name=chrom_name)
 
     sys.stdout.write("""
     Program executed successfully.
