@@ -33,7 +33,8 @@ Review `LICENSE` for details.
             ├── reader.py
         └── 📁motif_locator
             ├── __init__.py
-            ├── locator.py
+            ├── numba_locator.py
+            ├── numpy_locator.py
         └── 📁statistic_analysis
             ├── __init__.py
             ├── statistics.py
@@ -77,7 +78,7 @@ Review `LICENSE` for details.
     - Expected Motif Probability
     - Genome Length
     - Genome GC Content
-    - Observed Genome Base Probabilities (A, C, G, T)
+    - Observed Base Probabilities (A, C, G, T/U)
 
 `main.py` executes all modules to produce results. 
 

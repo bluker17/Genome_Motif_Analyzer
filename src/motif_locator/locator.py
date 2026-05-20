@@ -153,7 +153,7 @@ from Bio import SeqIO
 from collections import Counter
 import ahocorasick
 
-from src.macromolecule_alphabet.alphabet import Alphabet
+from alphabet.macromolecule_alphabet import Alphabet
 from src.results.result_dataclasses import MotifResult, StrandResult, ChromosomeResult
 
 

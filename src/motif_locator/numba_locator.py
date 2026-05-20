@@ -7,68 +7,9 @@ from typing import Iterator
 from Bio import SeqIO
 from numba import njit
 
+from src.alphabet.macromolecule_alphabet import Alphabet
+
 import numpy as np
-
-degenerate_map: dict[str, list[str]] = {
-    'A': ['A'],
-    'T': ['T'],
-    'G': ['G'],
-    'C': ['C'],
-    'N': ['A', 'T', 'G', 'C'],
-    'R': ['A', 'G'],
-    'Y': ['C', 'T'],
-    'W': ['A', 'T'],
-    'S': ['G', 'C'],
-    'K': ['G', 'T'],
-    'M': ['A', 'C'],
-    'B': ['C', 'G', 'T'],
-    'D': ['A', 'G', 'T'],
-    'H': ['A', 'C', 'T'],
-    'V': ['A', 'C', 'G']
-}
-
-RC_MAP: dict[str, str] = {
-    'A': 'T',
-    'T': 'A',
-    'C': 'G',
-    'G': 'C',
-    'R': 'Y',
-    'Y': 'R',
-    'S': 'S',
-    'W': 'W',
-    'K': 'M',
-    'M': 'K',
-    'B': 'V',
-    'V': 'B',
-    'D': 'H',
-    'H': 'D',
-    'N': 'N'
-}
-
-DNA_MASK = np.zeros(256, dtype=np.uint8)
-DNA_MASK[ord('A')] = 1
-DNA_MASK[ord('C')] = 2
-DNA_MASK[ord('G')] = 4
-DNA_MASK[ord('T')] = 8
-
-
-DEGENERATE_MASKS: dict[str, int] = {
-    'A': 1,
-    'C': 2,
-    'G': 4,
-    'T': 8,
-    'R': 1 | 4,
-    'Y': 2 | 8,
-    'S': 2 | 4,
-    'W': 1 | 8,
-    'K': 4 | 8,
-    'M': 1 | 2,
-    'B': 2 | 4 | 8,
-    'D': 1 | 4 | 8,
-    'H': 1 | 2 | 8,
-    'V': 1 | 2 | 4,
-    'N': 1 | 2 | 4 | 8,
-}
 
 @njit(cache=True)
 def motif_search_numba(genome: np.ndarray, motif: np.ndarray) -> int:
@@ -91,18 +32,23 @@ class Numba_Motif_Search:
     Motif detection and genome-level sequence statistics.
     """
 
-    def __init__(self, motif_info: dict, genomes: list[Path]) -> None:
+    def __init__(self, motif_info: dict, genomes: list[Path], alphabet: Alphabet) -> None:
         """
         Initialize motif search system.
         """
         self.motif_info = motif_info
         self.genomes = genomes
         self.motif_results: dict = {}
+        self.alphabet = alphabet
 
         self.motif_masks: dict[str, dict[str, np.ndarray]] = {
             enzyme: {
                 "forward": self.build_motif_bitmasks(info["motif_sequence"]),
-                "reverse": self.build_motif_bitmasks(self.revcomp_motif(info["motif_sequence"]))
+                "reverse": self.build_motif_bitmasks(
+                    self.alphabet.reverse_complement(
+                    info["motif_sequence"]
+                    )
+                )
             }
             for enzyme, info in motif_info.items()
         }
@@ -124,19 +70,13 @@ class Numba_Motif_Search:
         """
         Encode genome into bitmask representation.
         """
-        return DNA_MASK[arr]
+        return self.alphabet.ascii_mask[arr]
 
     def build_motif_bitmasks(self, motif: str) -> np.ndarray:
         """
         Convert motif into bitmask array.
         """
-        return np.array([DEGENERATE_MASKS[b] for b in motif.upper()], dtype=np.uint8)
-
-    def revcomp_motif(self, motif: str) -> str:
-        """
-        Generate reverse complement motif (no genome reversal needed).
-        """
-        return "".join(RC_MAP[b] for b in motif.upper()[::-1])
+        return np.array([self.alphabet.mask_map[b] for b in motif.upper()], dtype=np.uint8)
 
     def motif_search(self, genome: np.ndarray, motif: np.ndarray) -> int:
         """
@@ -147,23 +87,21 @@ class Numba_Motif_Search:
         return motif_search_numba(genome, motif)
 
     def compute_base_probs(self, seq: str) -> dict[str, float]:
-        """
-        Compute nucleotide frequencies.
-        """
+
         seq = seq.upper()
+
         counts = Counter(seq)
-        total = sum(counts[b] for b in "ACGT")
+
+        total = sum(counts[b] for b in self.alphabet.bases)
 
         if total == 0:
-            return {b: 0.0 for b in "ACGT"}
+            return {b: 0.0 for b in self.alphabet.bases}
 
-        return {b: counts[b] / total for b in "ACGT"}
+        return {b: counts[b] / total for b in self.alphabet.bases}
 
     def reverse_base_probs(self, forward_probs: dict[str, float]) -> dict[str, float]:
-        """
-        Convert forward strand probabilities into reverse strand probabilities.
-        """
-        return {"A": forward_probs["T"], "T": forward_probs["A"], "G": forward_probs["C"], "C": forward_probs["G"]}
+
+        return {base: forward_probs[self.alphabet.complement_map[base]] for base in self.alphabet.bases}
 
     def process_chromosome(self, chrom_name: str, sequence: str) -> dict:
         """
@@ -184,12 +122,12 @@ class Numba_Motif_Search:
             "genome_length": genome_length,
             "forward": {
                 "base_probs": fwd_base_probs,
-                "GC_content": fwd_base_probs["G"] + fwd_base_probs["C"],
+                "GC_content": sum(fwd_base_probs[b] for b in self.alphabet.gc_bases),
                 "proportion_test": {},
             },
             "reverse": {
                 "base_probs": rev_base_probs,
-                "GC_content": rev_base_probs["G"] + rev_base_probs["C"],
+                "GC_content": sum(rev_base_probs[b] for b in self.alphabet.gc_bases),
                 "proportion_test": {},
             }
         }

@@ -4,6 +4,9 @@
 import argparse, sys
 from pathlib import Path
 
+# Alphabets
+from src.alphabet.macromolecule_alphabet import ALPHABETS
+
 # File handling
 from src.file_reader.reader import Sequences
 from src.file_reader.reader import Enzymes
@@ -147,6 +150,7 @@ def main() -> int:
     # print(short_motifs)
     # print(long_motifs)
 
+    macromolecule = ALPHABETS[args.macromolecule]
 
     #==================================
     # MOTIF LOCATION AND STATISTICS
@@ -156,13 +160,13 @@ def main() -> int:
     csv_writer.create_csv_file()
 
     # Initialize the statistics class
-    stats_engine = Statistics()
+    stats_engine = Statistics(macromolecule)
 
     # Search for motifs in each genome. If the motif length is less than or equal to 4 bases then the sliding window method is used. Otherwise, numba is used.
 
     # Initialize engines once
-    numpy_locator = Numpy_Motif_Search(short_motifs, genome_files)
-    numba_locator = Numba_Motif_Search(long_motifs, genome_files)
+    numpy_locator = Numpy_Motif_Search(short_motifs, genome_files, macromolecule)
+    numba_locator = Numba_Motif_Search(long_motifs, genome_files, macromolecule)
 
     for genome in genome_files:
         print(f"\nProcessing {genome}")

@@ -5,23 +5,7 @@ import math
 import numpy as np
 from statsmodels.stats.proportion import proportions_ztest
 
-degenerate_map: dict[str, list[str]] = {
-    'A': ['A'],
-    'T': ['T'],
-    'G': ['G'],
-    'C': ['C'],
-    'N': ['A', 'T', 'G', 'C'],
-    'R': ['A', 'G'],
-    'Y': ['C', 'T'],
-    'W': ['A', 'T'],
-    'S': ['G', 'C'],
-    'K': ['G', 'T'],
-    'M': ['A', 'C'],
-    'B': ['C', 'G', 'T'],
-    'D': ['A', 'G', 'T'],
-    'H': ['A', 'C', 'T'],
-    'V': ['A', 'C', 'G']
-}
+from src.alphabet.macromolecule_alphabet import Alphabet
 
 class Statistics:
     """
@@ -31,11 +15,11 @@ class Statistics:
     produced by the Motifs module.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, alphabet: Alphabet) -> None:
         """
         Initializes the Statistics processor.
         """
-        pass
+        self.alphabet = alphabet
 
     def expected_prob(self, base_probs: dict[str, float], motif: str) -> float:
         """
@@ -58,7 +42,7 @@ class Statistics:
         prob = 1.0
 
         for base in motif.upper():
-            allowed_bases = degenerate_map[base]
+            allowed_bases = self.alphabet.degenerate_map[base]
             prob *= sum(base_probs[b] for b in allowed_bases)
 
         return prob
@@ -113,7 +97,7 @@ class Statistics:
                     data.update({
                         "z_stat": float(stat),
                         "p_value": float(pval),
-                        "significance": float(np.sign(stat)),
+                        "significance": "+" if float(np.sign(stat)) > 0 else "-" if float(np.sign(stat)) < 0 else 0,
                         "expected_count": possible_positions * expected_prob,
                         "total_positions": possible_positions,
                         "expected_motif_prob": expected_prob
