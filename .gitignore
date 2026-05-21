@@ -9,7 +9,7 @@ src/motif_locator/__pycache__
 src/statistic_analysis/__pycache__
 src/csv_output/__pycache__
 src/file_reader/__pycache__
-src/macromolecule_alphabet/__pycache__
+src/alphabet/__pycache__
 *pyc
 
 # Outputs
