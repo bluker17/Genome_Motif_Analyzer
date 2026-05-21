@@ -100,9 +100,9 @@ class Numba_Motif_Search:
 
         return {b: counts[b] / total for b in self.alphabet.bases}
 
-    def reverse_base_probs(self, forward_probs: dict[str, float]) -> dict[str, float]:
+    # def reverse_base_probs(self, forward_probs: dict[str, float]) -> dict[str, float]:
 
-        return {base: forward_probs[self.alphabet.complement_map[base]] for base in self.alphabet.bases}
+    #     return {base: forward_probs[self.alphabet.complement_map[base]] for base in self.alphabet.bases}
 
     def process_entry(self, entry_name: str, sequence: str) -> EntryResults:
         """
@@ -115,17 +115,17 @@ class Numba_Motif_Search:
 
         genome_length = len(sequence)
 
-        fwd_base_probs = self.compute_base_probs(sequence)
-        rev_base_probs = self.reverse_base_probs(fwd_base_probs)
+        base_probs = self.compute_base_probs(sequence)
+        # rev_base_probs = self.reverse_base_probs(fwd_base_probs)
 
         fwd_stats = StrandResults(
-            base_probs=fwd_base_probs,
-            GC_content=sum(fwd_base_probs[b] for b in self.alphabet.gc_bases)
+            base_probs=base_probs,
+            GC_content=sum(base_probs[b] for b in self.alphabet.gc_bases)
         )
 
         rev_stats = StrandResults(
-            base_probs=rev_base_probs,
-            GC_content=sum(rev_base_probs[b] for b in self.alphabet.gc_bases)
+            base_probs=base_probs,
+            GC_content=sum(base_probs[b] for b in self.alphabet.gc_bases)
         )
 
         for enzyme, info in self.motif_info.items():
