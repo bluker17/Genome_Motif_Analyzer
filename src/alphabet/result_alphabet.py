@@ -1,29 +1,31 @@
-# src/results/models.py
-from dataclasses import dataclass
-from typing import Optional
+from dataclasses import dataclass, field
+import math
 
 @dataclass(slots=True)
-class MotifResult:
-    motif: str
-    enzyme: str
-    organism: Optional[str]
+class MotifObservation:
+    "Stores the search results for a specific motif."
     observed: int
-    z_stat: float | None = None
-    p_value: float | None = None
-    significance: str | None = None
-    expected_count: float | None = None
-    total_positions: int | None = None
-    expected_motif_prob: float | None = None
+    enzyme: str
+    organism: str | None = None
+    z_stat: float = math.nan
+    p_value: float = math.nan
+    significance: str | float = math.nan
+    expected_count: float = math.nan
+    total_positions: int = 0
+    expected_motif_prob: float = 0.0
+
 
 @dataclass(slots=True)
-class StrandResult:
+class StrandResults:
+    "Contains the motif, base probability, and proportion test information per strand."
     base_probs: dict[str, float]
-    gc_content: float
-    motifs: list[MotifResult]
+    GC_content: float
+    proportion_test:dict[str, MotifObservation] = field(default_factory=dict)
 
 @dataclass(slots=True)
-class ChromosomeResult:
-    chromosome: str
+class EntryResults:
+    "Container for entry level results"
+    entry: str
     genome_length: int
-    forward: StrandResult | None
-    reverse: StrandResult | None
+    forward: StrandResults | None = None
+    reverse: StrandResults | None = None

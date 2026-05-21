@@ -6,6 +6,7 @@ import numpy as np
 from statsmodels.stats.proportion import proportions_ztest
 
 from src.alphabet.macromolecule_alphabet import Alphabet
+from src.alphabet.result_alphabet import EntryResults, StrandResults, MotifObservation
 
 class Statistics:
     """
@@ -28,7 +29,7 @@ class Statistics:
         Parameters
         ----------
         base_probs : dict[str, float]
-            Base probabilities for A/T/G/C.
+            Base probabilities for A/T or U/G/C.
         motif : str
             Motif sequence (may include degenerate bases).
         degenerate_map : dict[str, list[str]]
@@ -47,7 +48,7 @@ class Statistics:
 
         return prob
 
-    def run_proportion_test(self, chrom_stats: dict) -> dict:
+    def run_proportion_test(self, entry_stats: EntryResults) -> EntryResults:
             """
             Apply one-sided z-test for motif enrichment/depletion.
 
@@ -64,28 +65,25 @@ class Statistics:
                 Updated chrom_stats with statistical results added.
             """
 
-            genome_length = chrom_stats["genome_length"]
+            genome_length = entry_stats.genome_length
 
-            for strand in ["forward", "reverse"]:
-                base_probs = chrom_stats[strand]["base_probs"]
+            for strand in [entry_stats.forward, entry_stats.reverse]:
+                base_probs = strand.base_probs
 
-                for motif, data in chrom_stats[strand]["proportion_test"].items():
-
-                    observed = data["observed"]
-                    possible_positions = genome_length - len(motif) + 1
+                for motif, data in strand.proportion_test.items():
+                    observed = data.observed
+                    possible_positions =  genome_length - len(motif) + 1
 
                     expected_prob = self.expected_prob(base_probs=base_probs, motif=motif)
 
                     # Edge case protection
                     if possible_positions <= 0 or expected_prob in [0, 1]:
-                        data.update({
-                            "z_stat": math.nan,
-                            "p_value": math.nan,
-                            "significance": math.nan,
-                            "expected_count": math.nan,
-                            "total_positions": possible_positions,
-                            "expected_motif_prob": expected_prob
-                        })
+                        data.z_stat = math.nan
+                        data.p_value = math.nan
+                        data.significance = math.nan
+                        data.expected_count = math.nan
+                        data.total_positions = possible_positions
+                        data.expected_motif_prob = expected_prob
                         continue
 
                     stat, pval = proportions_ztest(
@@ -93,14 +91,12 @@ class Statistics:
                         nobs=possible_positions,
                         value=expected_prob
                     )
+                     
+                    data.z_stat = float(stat)
+                    data.p_value = float(pval)
+                    data.significance = "+" if float(np.sign(stat)) > 0 else "-" if float(np.sign(stat)) < 0 else 0
+                    data.expected_count = possible_positions * expected_prob
+                    data.total_positions = possible_positions
+                    data.expected_motif_prob = expected_prob
 
-                    data.update({
-                        "z_stat": float(stat),
-                        "p_value": float(pval),
-                        "significance": "+" if float(np.sign(stat)) > 0 else "-" if float(np.sign(stat)) < 0 else 0,
-                        "expected_count": possible_positions * expected_prob,
-                        "total_positions": possible_positions,
-                        "expected_motif_prob": expected_prob
-                    })
-
-            return chrom_stats
+            return entry_stats

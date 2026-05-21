@@ -4,7 +4,6 @@
 from dataclasses import dataclass
 from functools import cached_property
 
-
 @dataclass(frozen=True)
 class Alphabet:
     """

@@ -7,6 +7,7 @@ from typing import Iterator
 from Bio import SeqIO
 
 from src.alphabet.macromolecule_alphabet import Alphabet
+from src.alphabet.result_alphabet import EntryResults, StrandResults, MotifObservation
 
 import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view
@@ -45,7 +46,7 @@ class Numpy_Motif_Search:
 
     def stream_fasta(self, file: Path) -> Iterator[tuple[str, str]]:
         """
-        Stream FASTA records one chromosome at a time.
+        Stream FASTA records one entry at a time.
 
         Parameters
         ----------
@@ -55,7 +56,7 @@ class Numpy_Motif_Search:
         Yields
         ------
         Iterator[tuple[str, str]]
-            Chromosome name and sequence.
+            Entry name and sequence.
         """
 
         for record in SeqIO.parse(file, "fasta"):
@@ -63,12 +64,12 @@ class Numpy_Motif_Search:
 
     def seq_to_array(self, sequence: str) -> np.ndarray:
         """
-        Convert DNA sequence into compact NumPy byte array.
+        Convert genetic sequence into compact NumPy byte array.
 
         Parameters
         ----------
         sequence : str
-            DNA sequence.
+            Genetic sequence.
 
         Returns
         -------
@@ -149,12 +150,12 @@ class Numpy_Motif_Search:
         Parameters
         ----------
         seq : str
-            DNA sequence.
+            Genetic sequence.
 
         Returns
         -------
         dict[str, float]
-            Base probabilities for A/T/G/C.
+            Base probabilities for A/T or U/G/C.
         """
 
         seq = seq.upper()
@@ -185,21 +186,21 @@ class Numpy_Motif_Search:
 
         return {base: forward_probs[self.alphabet.complement_map[base]] for base in self.alphabet.bases}
     
-    def process_chromosome(self, chrom_name: str, sequence: str) -> dict:
+    def process_entry(self, entry_name: str, sequence: str) -> EntryResults:
         """
-        Process a chromosome for motif occurrence statistics.
+        Process a FASTA entry for motif occurrence statistics.
 
         Parameters
         ----------
         chrom_name : str
-            Chromosome identifier.
+            Entry identifier.
         sequence : str
-            Chromosome sequence.
+            Entry sequence.
 
         Returns
         -------
         dict
-            Chromosome motif statistics.
+            Entry motif statistics.
         """
 
         sequence = sequence.upper()
@@ -211,23 +212,15 @@ class Numpy_Motif_Search:
         fwd_base_probs = self.compute_base_probs(sequence)
         rev_base_probs = self.reverse_base_probs(fwd_base_probs)
 
-        chrom_stats = {
-            "chromosome": chrom_name,
+        fwd_stats = StrandResults(
+            base_probs=fwd_base_probs,
+            GC_content=sum(fwd_base_probs[b] for b in self.alphabet.gc_bases)
+        )
 
-            "genome_length": genome_length,
-
-            "forward": {
-                "base_probs": fwd_base_probs,
-                "GC_content": sum(fwd_base_probs[b] for b in self.alphabet.gc_bases),
-                "proportion_test": {},
-            },
-
-            "reverse": {
-                "base_probs": rev_base_probs,
-                "GC_content": sum(rev_base_probs[b] for b in self.alphabet.gc_bases),
-                "proportion_test": {},
-            }
-        }
+        rev_stats = StrandResults(
+            base_probs=fwd_base_probs,
+            GC_content=sum(rev_base_probs[b] for b in self.alphabet.gc_bases)
+        )
 
         for enzyme, info in self.motif_info.items():
 
@@ -239,16 +232,21 @@ class Numpy_Motif_Search:
             _, fwd_count = self.motif_search(genome_arr, fwd_masks)
             _, rev_count = self.motif_search(genome_arr, rev_masks)
 
-            chrom_stats["forward"]["proportion_test"][motif] = {
-                "observed": fwd_count,
-                "enzyme": enzyme,
-                "organism": info.get("organism")
-            }
-
-            chrom_stats["reverse"]["proportion_test"][motif] = {
-                "observed": rev_count,
-                "enzyme": enzyme,
-                "organism": info.get("organism")
-            }
-
-        return chrom_stats
+            fwd_stats.proportion_test[motif] = MotifObservation(
+                observed=fwd_count,
+                enzyme=enzyme,
+                organism=info.get("organism")
+                )
+            
+            rev_stats.proportion_test[motif] = MotifObservation(
+                observed=rev_count,
+                enzyme=enzyme,
+                organism=info.get("organism")
+                )
+            
+        return EntryResults(
+            entry=entry_name,
+            genome_length=genome_length,
+            forward=fwd_stats,
+            reverse=rev_stats
+        )

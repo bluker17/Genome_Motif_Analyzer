@@ -6,6 +6,7 @@ from pathlib import Path
 
 # Alphabets
 from src.alphabet.macromolecule_alphabet import ALPHABETS
+from src.alphabet.result_alphabet import EntryResults, MotifObservation, StrandResults
 
 # File handling
 from src.file_reader.reader import Sequences
@@ -156,7 +157,7 @@ def main() -> int:
     # MOTIF LOCATION AND STATISTICS
     #==================================
     # Initialize the CSV output file
-    csv_writer = CSVWriter(Path(args.csv_output))
+    csv_writer = CSVWriter(Path(args.csv_output), macromolecule)
     csv_writer.create_csv_file()
 
     # Initialize the statistics class
@@ -171,22 +172,20 @@ def main() -> int:
     for genome in genome_files:
         print(f"\nProcessing {genome}")
 
-        for chrom_name, sequence in numpy_locator.stream_fasta(genome):
-            #print(f"\tProcessing chromosome {chrom_name}")
+        for entry_name, sequence in numpy_locator.stream_fasta(genome):
+            #print(f"\tProcessing chromosome {entry_name}")
 
             if short_motifs:
-                chrom_stats = numpy_locator.process_chromosome(chrom_name, sequence)
+                entry_data: EntryResults = numpy_locator.process_entry(entry_name, sequence)
+                entry_data = stats_engine.run_proportion_test(entry_data)
 
-                chrom_stats = stats_engine.run_proportion_test(chrom_stats)
-
-                csv_writer.append_csv(stats=chrom_stats, fasta_file=genome.name, chrom_name=chrom_name)
+                csv_writer.append_csv(stats=entry_data, fasta_file=genome.name, entry_name=entry_name)
 
             if long_motifs:
-                chrom_stats = numba_locator.process_chromosome(chrom_name, sequence)
+                entry_data: EntryResults = numba_locator.process_entry(entry_name, sequence)
+                entry_data = stats_engine.run_proportion_test(entry_data)
 
-                chrom_stats = stats_engine.run_proportion_test(chrom_stats)
-
-                csv_writer.append_csv(stats=chrom_stats, fasta_file=genome.name,chrom_name=chrom_name)
+                csv_writer.append_csv(stats=entry_data, fasta_file=genome.name,entry_name=entry_name)
 
     sys.stdout.write("""
     Program executed successfully.

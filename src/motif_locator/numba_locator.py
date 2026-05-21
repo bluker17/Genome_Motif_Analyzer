@@ -8,6 +8,7 @@ from Bio import SeqIO
 from numba import njit
 
 from src.alphabet.macromolecule_alphabet import Alphabet
+from src.alphabet.result_alphabet import EntryResults, StrandResults, MotifObservation
 
 import numpy as np
 
@@ -103,7 +104,7 @@ class Numba_Motif_Search:
 
         return {base: forward_probs[self.alphabet.complement_map[base]] for base in self.alphabet.bases}
 
-    def process_chromosome(self, chrom_name: str, sequence: str) -> dict:
+    def process_entry(self, entry_name: str, sequence: str) -> EntryResults:
         """
         Process chromosome for motif occurrence statistics.
         """
@@ -117,20 +118,15 @@ class Numba_Motif_Search:
         fwd_base_probs = self.compute_base_probs(sequence)
         rev_base_probs = self.reverse_base_probs(fwd_base_probs)
 
-        chrom_stats = {
-            "chromosome": chrom_name,
-            "genome_length": genome_length,
-            "forward": {
-                "base_probs": fwd_base_probs,
-                "GC_content": sum(fwd_base_probs[b] for b in self.alphabet.gc_bases),
-                "proportion_test": {},
-            },
-            "reverse": {
-                "base_probs": rev_base_probs,
-                "GC_content": sum(rev_base_probs[b] for b in self.alphabet.gc_bases),
-                "proportion_test": {},
-            }
-        }
+        fwd_stats = StrandResults(
+            base_probs=fwd_base_probs,
+            GC_content=sum(fwd_base_probs[b] for b in self.alphabet.gc_bases)
+        )
+
+        rev_stats = StrandResults(
+            base_probs=rev_base_probs,
+            GC_content=sum(rev_base_probs[b] for b in self.alphabet.gc_bases)
+        )
 
         for enzyme, info in self.motif_info.items():
 
@@ -142,16 +138,21 @@ class Numba_Motif_Search:
             fwd_count = self.motif_search(genome_encoded, fwd_mask)
             rev_count = self.motif_search(genome_encoded, rev_mask)
 
-            chrom_stats["forward"]["proportion_test"][motif] = {
-                "observed": fwd_count,
-                "enzyme": enzyme,
-                "organism": info.get("organism")
-            }
+            fwd_stats.proportion_test[motif] = MotifObservation(
+                observed=fwd_count,
+                enzyme=enzyme,
+                organism=info.get("organism")
+            )
 
-            chrom_stats["reverse"]["proportion_test"][motif] = {
-                "observed": rev_count,
-                "enzyme": enzyme,
-                "organism": info.get("organism")
-            }
+            rev_stats.proportion_test[motif] = MotifObservation(
+                observed=rev_count,
+                enzyme=enzyme,
+                organism=info.get("organism")
+            )
 
-        return chrom_stats
+        return EntryResults(
+            entry=entry_name,
+            genome_length=genome_length,
+            forward=fwd_stats,
+            reverse=rev_stats
+            )
