@@ -168,8 +168,8 @@ def main() -> int:
         # Search for motifs in each genome. If the motif length is less than or equal to 4 bases then the sliding window method is used. Otherwise, numba is used.
 
         # Initialize engines once
-        print(short_motifs.keys())
-        print(long_motifs.keys())
+        # print(short_motifs.keys())
+        # print(long_motifs.keys())
         numpy_locator = Numpy_Motif_Search(short_motifs, genome_files, macromolecule)
         numba_locator = Numba_Motif_Search(long_motifs, genome_files, macromolecule)
 

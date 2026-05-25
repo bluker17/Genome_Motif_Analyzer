@@ -1,0 +1,12 @@
+enzyme,motif_sequence,organism
+SpCas9,NGG,Streptococcus_pyogenes
+SaCas9,NNGRRN,Staphylococcus_aureus
+SaCas9,NNGRRU,Staphylococcus_aureus
+CjCas9,NNNNRYAC,Camplylobacter_jejuni
+CjCas9,NNNNACAC,Camplylobacter_jejuni
+NmeCas9,NNNNGAUU,Neisseria meningitidis
+StCas9,NNAGAAW,Streptococcus_thermophilus
+LbCpf1,UUUV,Lachnospiraceae_bacterium
+AsCpf1,UUUV,Acidaminococcus_sp.
+BhCas12b_v4,DUUN,Caldifermentibacillus_hisashii
+AacCas12b,UUN,Alicyclobacillus_acidiphilus

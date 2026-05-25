@@ -128,12 +128,17 @@ conda activate motif_analyzer
 ```
 2. Run any or all of the following commands to test the program:
 ```bash
-testing_materials/run_test_1.sh
-testing_materials/run_test_2.sh
-testing_materials/run_test_3.sh
-testing_materials/run_test_4.sh
+testing_materials/cattle_test.sh
+testing_materials/DNA_phage_test.sh
+testing_materials/RNA_test_phage.sh
 ```
-3. Results from `testing_materials/run_test_X.sh` can be found in `testing_materials/example_outputs/`. The generated test output CSV files can be compared to the expected results in `testing_materials/expected_example_outputs/`.
+If the above commands do not work, then please run the following command and retry executing the test runs.
+```bash
+chmod +x testing_materials/*.sh
+```
+
+3. Results from the test runs can be in their respective directory in `testing_materials/example_outputs/`. The generated test output CSV files can be compared to the expected results in `testing_materials/expected_example_outputs/`.
+
 
 4. To run the program with specific data, place the FASTA files in a sub-directory of `data/` and place the motif information CSV file into `data/`. **Please refer to `testing_materials/example_data/` for the required format of motif information CSV files.** The following is an example of all provided files in the `data/`:
 ```
@@ -143,9 +148,13 @@ testing_materials/run_test_4.sh
         ├── sa_motifs.csv
 ```
 
-5. Following the example in 4, the program can then be run as the following single-line command:
+5. Following the example in step 4, the program can then be run as the following single-line command:
 ```bash
 ./main.py -f data/cattle/ -m data/sa_motif.csv -c output/20260520_sa_results.csv -s forward
+```
+If the above commands do not work, then please run the following command and retry executing the test runs.
+```bash
+chmod +x main.py
 ```
 
 ### Command-Line Arguments
