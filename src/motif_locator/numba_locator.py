@@ -11,6 +11,7 @@ from src.alphabet.macromolecule_alphabet import Alphabet
 from src.alphabet.result_alphabet import EntryResults, StrandResults, MotifObservation
 
 import numpy as np
+import sys
 
 @njit(cache=True)
 def motif_search_numba(genome: np.ndarray, motif: np.ndarray) -> int:
@@ -33,20 +34,20 @@ class Numba_Motif_Search:
     Motif detection and genome-level sequence statistics.
     """
 
-    def __init__(self, motif_info: dict, genomes: list[Path], alphabet: Alphabet) -> None:
+    def __init__(self, motif_info: dict, genomes: list[Path], macromolecule: Alphabet) -> None:
         """
         Initialize motif search system.
         """
         self.motif_info = motif_info
         self.genomes = genomes
         self.motif_results: dict = {}
-        self.alphabet = alphabet
+        self.macromolecule = macromolecule
 
         self.motif_masks: dict[str, dict[str, np.ndarray]] = {
             enzyme: {
                 "forward": self.build_motif_bitmasks(info["motif_sequence"]),
                 "reverse": self.build_motif_bitmasks(
-                    self.alphabet.reverse_complement(
+                    self.macromolecule.reverse_complement(
                     info["motif_sequence"]
                     )
                 )
@@ -56,14 +57,14 @@ class Numba_Motif_Search:
 
     def stream_fasta(self, file: Path) -> Iterator[tuple[str, str]]:
         """
-        Stream FASTA records one chromosome at a time.
+        Stream FASTA records one at a time.
         """
         for record in SeqIO.parse(file, "fasta"):
             yield record.description, str(record.seq)
 
     def seq_to_array(self, sequence: str) -> np.ndarray:
         """
-        Convert DNA sequence into ASCII NumPy array.
+        Convert sequence into ASCII NumPy array.
         """
         return np.frombuffer(sequence.encode("ascii"), dtype=np.uint8)
 
@@ -71,13 +72,13 @@ class Numba_Motif_Search:
         """
         Encode genome into bitmask representation.
         """
-        return self.alphabet.ascii_mask[arr]
+        return self.macromolecule.ascii_mask[arr]
 
     def build_motif_bitmasks(self, motif: str) -> np.ndarray:
         """
         Convert motif into bitmask array.
         """
-        return np.array([self.alphabet.mask_map[b] for b in motif.upper()], dtype=np.uint8)
+        return np.array([self.macromolecule.mask_map[b] for b in motif.upper()], dtype=np.uint8)
 
     def motif_search(self, genome: np.ndarray, motif: np.ndarray) -> int:
         """
@@ -93,16 +94,16 @@ class Numba_Motif_Search:
 
         counts = Counter(seq)
 
-        total = sum(counts[b] for b in self.alphabet.bases)
+        for c in counts:
+            if c not in self.macromolecule.degenerate_map:
+                raise ValueError(f"{c} is an invalid base for {self.macromolecule.name}. Please ensure that all FASTA sequences contain appropriate macromolecule bases.")
+
+        total = sum(counts[b] for b in self.macromolecule.bases)
 
         if total == 0:
-            return {b: 0.0 for b in self.alphabet.bases}
+            return {b: 0.0 for b in self.macromolecule.bases}
 
-        return {b: counts[b] / total for b in self.alphabet.bases}
-
-    # def reverse_base_probs(self, forward_probs: dict[str, float]) -> dict[str, float]:
-
-    #     return {base: forward_probs[self.alphabet.complement_map[base]] for base in self.alphabet.bases}
+        return {b: counts[b] / total for b in self.macromolecule.bases}
 
     def process_entry(self, entry_name: str, sequence: str) -> EntryResults:
         """
@@ -120,12 +121,12 @@ class Numba_Motif_Search:
 
         fwd_stats = StrandResults(
             base_probs=base_probs,
-            GC_content=sum(base_probs[b] for b in self.alphabet.gc_bases)
+            GC_content=sum(base_probs[b] for b in self.macromolecule.gc_bases)
         )
 
         rev_stats = StrandResults(
             base_probs=base_probs,
-            GC_content=sum(base_probs[b] for b in self.alphabet.gc_bases)
+            GC_content=sum(base_probs[b] for b in self.macromolecule.gc_bases)
         )
 
         for enzyme, info in self.motif_info.items():

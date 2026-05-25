@@ -17,7 +17,7 @@ class MotifObservation:
 
 @dataclass(slots=True)
 class StrandResults:
-    "Contains the motif, base probability, and proportion test information per strand."
+    "Contains the base probability, and proportion test information per strand."
     base_probs: dict[str, float]
     GC_content: float
     proportion_test:dict[str, MotifObservation] = field(default_factory=dict)

@@ -8,9 +8,7 @@ UNCC ID: 801484356
 
 ## Program Description
 
-From user provided DNA or RNA FASTA file(s) and a motif information CSV file, the program counts all motif instances within the FASTA file(s) using the Aho-Corasick method. One-sided proportion tests are then performed per motif per genome to determine motif enrichment or depletion. These results can reveal evolutionary genetic changes in an organism over time. The results are saved to a CSV containing motif information, FASTA file information, base probabilities of a FASTA file, and statistic values used to perform the one-sided proportion test.
-
-The program handles eukaryotic and prokaryotic FASTA files. When running the program with a eukaryotic organism, the motif search and statisic calculations are performed per chromosome.
+From user provided DNA or RNA FASTA file(s) and a motif information CSV file, the program counts all motif instances within all entries of the FASTA file(s). Using numpy and numba vectorized search methods, the motif search can be perfromed on the forward, reverse, of both strands of the genome, as specified by the user. Following the search, one-sided proportion tests are then performed per motif per FASTA entry to determine motif enrichment or depletion.. The results are saved to a CSV file containing motif information, FASTA file information, base probabilities of each FASTA entry, and statistic values used to perform the one-sided proportion test.
 
 [Github Project URL](https://github.com/bluker17/Genome_Motif_Analyzer)
 
@@ -25,6 +23,10 @@ Review `LICENSE` for details.
     └── 📁data
     └── 📁output
     └── 📁src
+        └── alphabet
+            ├── __init__.py
+            ├── macromolecule_alphabet.py
+            ├── result_alphabet.py
         └── 📁csv_output
             ├── __init__.py
             ├── output.py
@@ -59,10 +61,20 @@ Review `LICENSE` for details.
 `output/`: Contains the generated CSV output files from running the program.
 
 `src/`: Contains multiple subdirectories leading to modules handling the input and output data. 
-1. `file_reader/` contains module `reader.py` which collects all the provided FASTA files and motifs to search from the provided motif CSV file.
-2. `motif_locator/` contains module `locator.py` which searches for all motif instances in the FASTA files using the Aho-Corasick algorithm. Results are passed onto the `statistics.py` for further analysis in the form of a dictionary.
-3. `statistic_analysis/` contain module `statistics.py` which performs a one-sided proportion tests on motif occurrences per strand and per FASTA file as provided from the `locator.py` findings. Statistical and locator results are saved into a dictionary and passed onto `output.py`.
-4. `csv_output/`contains module `output.py` which generates a CSV file for the overall results with the following information:
+
+1. `alphabet/` contains modules that define dataclasses containing information passed throughout the modules of the program.
+    - `macromolecule_alphabet.py` defines the DNA and RNA alphabet dataclasses, which contain degenerate and complement base information, and bit maps for converting genetic and motif sequences for faster motif searches. 
+    - `result_alphabet` has three dataclasses that build upon each other:
+        1. `MotifObservations` which stores the search results for a specific motif.
+        2. `StrandResults` which stores the base probabilities, and proportion test results per strand of a FASTA entry using the information from `MotifObservations`.
+        3. `EntryResults` which stores all gathered results per FASTA entry using `StrandResults`.
+
+2. `file_reader/` contains module `reader.py` which collects all the provided FASTA files and motifs to search from the provided motif CSV file.
+3. `motif_locator/` contains modules that search the FASTA file(s) for motif instances and passes the results to `statistics.py` via dataclasses found in `result_alphabet.py`.
+    - `numpy_locator.py`  searches for all instances of motifs with a length of 4 bp or less in the FASTA files using the numpy vectorization. 
+    - `numba_locator.py` searches for all instances of motifs with a length greater than 4 bp in the FASTA files using the numba vectorization. 
+4. `statistic_analysis/` contain module `statistics.py` which performs a one-sided proportion tests on motif occurrences per strand and per FASTA file as provided from the `result_alphabet.py` dataclasses. Statistical and locator results are saved into a dictionary and passed onto `output.py`.
+5. `csv_output/`contains module `output.py` which generates a CSV file for the overall results with the following information:
     - FASTA Organism (genetic entry in FASTA file)
     - FASTA File
     - Strand Searched ('forward' or 'reverse')
@@ -140,15 +152,16 @@ testing_materials/run_test_4.sh
 | Argument  | Description |
 | --- | --- |
 | -c, --csv_output | Output CSV file path and filename |
-| -f, --fasta_files | Directory containing FASTA files. |
+| -f, --fasta_files | Directory containing FASTA file(s). |
 | -m, --motif_file | CSV file containing motif information. |
 | -s, --strand_to_search | Strand to search for motifs. Options: forward, reverse, or both. |
+| --macromolecule | Macromolecule provided in FASTA directory. |
 
 ### Expected Output:
 
 - Searches the provided FASTA file(s) with the provided motif sequence(s).
 - Performs a one-sided proportion test per motif per strand of the provided FASTA file(s).
-- Results saved to a CSV file.
+- Results are saved to a CSV file.
 
 ## References
 
@@ -207,6 +220,14 @@ Python Software Foundation. (2024). *sys — System-specific parameters and func
 https://docs.python.org/3/library/sys.html
 
 Used for interacting with interpreter-level functionality such as command-line arguments and program exit handling.
+
+---
+
+**`traceback`**    
+Python Software Foundation. (n.d.). *traceback — Print or retrieve a stack traceback. Python 3 Documentation*.
+[https://docs.python.org/3/library/traceback.html](https://docs.python.org/3/library/traceback.html)
+
+Used for extracting, formatting, and printing the call stack of an exception, enabling detailed debugging and logging of errors in Python applications.
 
 ---
 

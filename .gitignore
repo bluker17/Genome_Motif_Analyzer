@@ -19,3 +19,6 @@ testing_materials/example_outputs/*
 # Data
 data/*
 testing_materials/example_data/cattle/*
+
+# Error log
+errors.log

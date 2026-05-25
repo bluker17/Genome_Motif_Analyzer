@@ -70,7 +70,11 @@ class Statistics:
             for strand in [entry_stats.forward, entry_stats.reverse]:
                 base_probs = strand.base_probs
 
+                # print(strand.proportion_test.items())
+
                 for motif, data in strand.proportion_test.items():
+                    # print(f"Motif - {motif}")
+                    # print(f"Data - {data}")
                     observed = data.observed
                     possible_positions =  genome_length - len(motif) + 1
 

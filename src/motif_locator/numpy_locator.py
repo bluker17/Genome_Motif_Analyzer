@@ -24,11 +24,11 @@ class Numpy_Motif_Search:
         FASTA genome files to process.
     """
 
-    def __init__(self, motif_info: dict, genomes: list[Path], alphabet: Alphabet) -> None:
+    def __init__(self, motif_info: dict, genomes: list[Path], macromolecule: Alphabet) -> None:
 
         self.motif_info = motif_info
         self.genomes = genomes
-        self.alphabet = alphabet
+        self.macromolecule = macromolecule
 
         self.motif_results: dict = {}
 
@@ -36,7 +36,7 @@ class Numpy_Motif_Search:
             enzyme: {
                 "forward": self.build_motif_masks(info["motif_sequence"]),
                 "reverse": self.build_motif_masks(
-                        self.alphabet.reverse_complement(
+                        self.macromolecule.reverse_complement(
                         info["motif_sequence"]
                         )
                     )
@@ -100,7 +100,7 @@ class Numpy_Motif_Search:
 
             mask = np.zeros(256, dtype=bool)
 
-            for base in self.alphabet.degenerate_map[char]: mask[ord(base)] = True
+            for base in self.macromolecule.degenerate_map[char]: mask[ord(base)] = True
 
             masks.append(mask)
 
@@ -162,29 +162,16 @@ class Numpy_Motif_Search:
 
         counts = Counter(seq)
 
-        total = sum(counts[b] for b in self.alphabet.bases)
+        for c in counts:
+            if c not in self.macromolecule.degenerate_map:
+                raise ValueError(f"{c} is an invalid base for {self.macromolecule.name}. Please ensure that all FASTA sequences contain appropriate macromolecule bases.")
+
+        total = sum(counts[b] for b in self.macromolecule.bases)
 
         if total == 0:
-            return {b: 0.0 for b in self.alphabet.bases}
+            return {b: 0.0 for b in self.macromolecule.bases}
 
-        return {b: counts[b] / total for b in self.alphabet.bases}
-
-    # def reverse_base_probs(self, forward_probs: dict[str, float]) -> dict[str, float]:
-    #     """
-    #     Convert forward strand probabilities into reverse strand probabilities.
-
-    #     Parameters
-    #     ----------
-    #     forward_probs : dict[str, float]
-    #         Forward strand probabilities.
-
-    #     Returns
-    #     -------
-    #     dict[str, float]
-    #         Reverse strand probabilities.
-    #     """
-
-    #     return {base: forward_probs[self.alphabet.complement_map[base]] for base in self.alphabet.bases}
+        return {b: counts[b] / total for b in self.macromolecule.bases}
     
     def process_entry(self, entry_name: str, sequence: str) -> EntryResults:
         """
@@ -210,16 +197,15 @@ class Numpy_Motif_Search:
         genome_length = len(sequence)
 
         base_probs = self.compute_base_probs(sequence)
-        # rev_base_probs = self.reverse_base_probs(fwd_base_probs)
 
         fwd_stats = StrandResults(
             base_probs=base_probs,
-            GC_content=sum(base_probs[b] for b in self.alphabet.gc_bases)
+            GC_content=sum(base_probs[b] for b in self.macromolecule.gc_bases)
         )
 
         rev_stats = StrandResults(
             base_probs=base_probs,
-            GC_content=sum(base_probs[b] for b in self.alphabet.gc_bases)
+            GC_content=sum(base_probs[b] for b in self.macromolecule.gc_bases)
         )
 
         for enzyme, info in self.motif_info.items():

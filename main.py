@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import argparse, sys
+import argparse, sys, traceback
 from pathlib import Path
 
 # Alphabets
 from src.alphabet.macromolecule_alphabet import ALPHABETS
-from src.alphabet.result_alphabet import EntryResults, MotifObservation, StrandResults
+from src.alphabet.result_alphabet import EntryResults
 
 # File handling
 from src.file_reader.reader import Sequences
@@ -120,81 +120,90 @@ def validate_args(args: argparse.Namespace):
         raise FileNotFoundError("CSV output file must be located in 'output/'.")
 
 def main() -> int: 
-    args = parse_args()
+    try:
 
-    sys.stdout.write("""
-    Arguments received:
-        Directory containing FASTA file(s): {fasta_files}
-        Macromolecule in FASTA file(s): {macromolecule}
-        Strand to investigate: {strand_to_search}
-        Motif information CSV file: {motif_file}
-        Output CSV file: {csv_output}
-    """.format(
-        fasta_files=args.fasta_files,
-        macromolecule = args.macromolecule,
-        strand_to_search = args.strand_to_search,
-        motif_file=args.motif_file,
-        csv_output=args.csv_output
-    ))
+        args = parse_args()
 
-    # validate_args(args)
+        sys.stdout.write("""
+        Arguments received:
+            Directory containing FASTA file(s): {fasta_files}
+            Macromolecule in FASTA file(s): {macromolecule}
+            Strand to investigate: {strand_to_search}
+            Motif information CSV file: {motif_file}
+            Output CSV file: {csv_output}
+        """.format(
+            fasta_files=args.fasta_files,
+            macromolecule = args.macromolecule,
+            strand_to_search = args.strand_to_search,
+            motif_file=args.motif_file,
+            csv_output=args.csv_output
+        ))
 
-    #==================================
-    # INPUT FILE HANDLING
-    #==================================
-    genomes = Sequences(args.fasta_files)
-    genome_files = genomes.collect_fasta_files()
-    # print(genome_files)
+        validate_args(args)
 
-    motifs = Enzymes(args.motif_file)
-    short_motifs, long_motifs = motifs.collect_motifs()
-    # print(short_motifs)
-    # print(long_motifs)
+        macromolecule = ALPHABETS[args.macromolecule]
 
-    macromolecule = ALPHABETS[args.macromolecule]
+        #==================================
+        # INPUT FILE HANDLING
+        #==================================
+        genomes = Sequences(args.fasta_files)
+        genome_files = genomes.collect_fasta_files()
+        # print(genome_files)
 
-    #==================================
-    # MOTIF LOCATION AND STATISTICS
-    #==================================
-    # Initialize the CSV output file
-    csv_writer = CSVWriter(Path(args.csv_output), macromolecule)
-    csv_writer.create_csv_file()
+        motifs = Enzymes(args.motif_file, macromolecule)
+        short_motifs, long_motifs = motifs.collect_motifs()
+        # print(short_motifs)
+        # print(long_motifs)
 
-    # Initialize the statistics class
-    stats_engine = Statistics(macromolecule)
+        #==================================
+        # MOTIF LOCATION AND STATISTICS
+        #==================================
+        # Initialize the CSV output file
+        csv_writer = CSVWriter(Path(args.csv_output), macromolecule)
+        csv_writer.create_csv_file()
 
-    # Search for motifs in each genome. If the motif length is less than or equal to 4 bases then the sliding window method is used. Otherwise, numba is used.
+        # Initialize the statistics class
+        stats_engine = Statistics(macromolecule)
 
-    # Initialize engines once
-    numpy_locator = Numpy_Motif_Search(short_motifs, genome_files, macromolecule)
-    numba_locator = Numba_Motif_Search(long_motifs, genome_files, macromolecule)
+        # Search for motifs in each genome. If the motif length is less than or equal to 4 bases then the sliding window method is used. Otherwise, numba is used.
 
-    for genome in genome_files:
-        print(f"\nProcessing {genome}")
+        # Initialize engines once
+        print(short_motifs.keys())
+        print(long_motifs.keys())
+        numpy_locator = Numpy_Motif_Search(short_motifs, genome_files, macromolecule)
+        numba_locator = Numba_Motif_Search(long_motifs, genome_files, macromolecule)
 
-        for entry_name, sequence in numpy_locator.stream_fasta(genome):
-            #print(f"\tProcessing chromosome {entry_name}")
+        for genome in genome_files:
+            print(f"\nProcessing {genome}")
 
             if short_motifs:
-                entry_data: EntryResults = numpy_locator.process_entry(entry_name, sequence)
-                entry_data = stats_engine.run_proportion_test(entry_data)
+                for entry_name, sequence in numpy_locator.stream_fasta(genome):
+                    #print(f"\tProcessing FASTA entry {entry_name}")
+                    entry_data: EntryResults = numpy_locator.process_entry(entry_name, sequence)
+                    entry_data = stats_engine.run_proportion_test(entry_data)
 
-                csv_writer.append_csv(stats=entry_data, fasta_file=genome.name, entry_name=entry_name)
+                    csv_writer.append_csv(stats=entry_data, fasta_file=genome.name, entry_name=entry_name)
 
             if long_motifs:
-                entry_data: EntryResults = numba_locator.process_entry(entry_name, sequence)
-                entry_data = stats_engine.run_proportion_test(entry_data)
+                for entry_name, sequence in numba_locator.stream_fasta(genome):
+                    #print(f"\tProcessing FASTA entry {entry_name}")
+                    entry_data: EntryResults = numba_locator.process_entry(entry_name, sequence)
+                    entry_data = stats_engine.run_proportion_test(entry_data)
 
-                csv_writer.append_csv(stats=entry_data, fasta_file=genome.name,entry_name=entry_name)
+                    csv_writer.append_csv(stats=entry_data, fasta_file=genome.name,entry_name=entry_name)
 
-    sys.stdout.write("""
-    Program executed successfully.
-        Output CSV File: {csv_output}
-    """.format(
-        csv_output=args.csv_output
-    ))
+        sys.stdout.write("""
+        Program executed successfully.
+            Output CSV File: {csv_output}
+        """.format(
+            csv_output=args.csv_output
+        ))
 
-    return 0
+        return 0
+
+    except ValueError as e:
+        traceback.print_exc(file=sys.stderr)
+        return 1
 
 if __name__ == "__main__":
     sys.exit(main())

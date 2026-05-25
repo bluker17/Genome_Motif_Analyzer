@@ -3,8 +3,9 @@
 
 import csv
 from pathlib import Path
-from typing import Iterator, Tuple, List
-from Bio import SeqIO
+from typing import List
+
+from src.alphabet.macromolecule_alphabet import Alphabet
 
 class Sequences:
     def __init__(self, fasta_dir: Path) -> None:
@@ -20,10 +21,11 @@ class Sequences:
         return self.fasta_files
 
 class Enzymes:
-    def __init__(self, motif_file: str) -> None:
+    def __init__(self, motif_file: str, macromolecule: Alphabet) -> None:
         self.motif_file = motif_file
         self.short_enzyme_info = {}
         self.long_enzyme_info = {}
+        self.macromolecule = macromolecule
 
     def collect_motifs(self) -> dict:
         with open(self.motif_file, "r", newline="") as f:
@@ -31,14 +33,21 @@ class Enzymes:
 
             for row in reader:
                 motif = row["motif_sequence"].strip()
+                enzyme = row["enzyme"].strip()
+                composite_key = f"{enzyme}:{motif}"
+
+                for b in motif:
+                    if b not in self.macromolecule.degenerate_map:
+                       raise ValueError(f"Macromolecule is set to {self.macromolecule.name}. {motif} contains '{b}'. Please update the motif to handle only {self.macromolecule.name} bases.")
+                
                 if len(motif) <= 4:
-                    self.short_enzyme_info[motif] = {
+                    self.short_enzyme_info[composite_key] = {
                         "motif_sequence": row["motif_sequence"],
                         "enzyme": row["enzyme"].strip(),
                         "organism": row["organism"].strip()
                     }
                 else:
-                    self.long_enzyme_info[motif] = {
+                    self.long_enzyme_info[composite_key] = {
                         "motif_sequence": row["motif_sequence"],
                         "enzyme": row["enzyme"].strip(),
                         "organism": row["organism"].strip()
