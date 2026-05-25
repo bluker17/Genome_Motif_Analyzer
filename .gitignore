@@ -1,9 +1,6 @@
 # DS_store files
 .DS_store
 
-# Testing Outputs
-testing_materials/example_outputs/*
-
 # Python
 src/motif_locator/__pycache__
 src/statistic_analysis/__pycache__
@@ -14,11 +11,10 @@ src/alphabet/__pycache__
 
 # Outputs
 output/*
-testing_materials/example_outputs/*
 
 # Data
 data/*
-testing_materials/example_data/cattle/*
+testing_materials/example_data/cattle*
 
 # Error log
 errors.log

@@ -10,6 +10,8 @@ UNCC ID: 801484356
 
 From user provided DNA or RNA FASTA file(s) and a motif information CSV file, the program counts all motif instances within all entries of the FASTA file(s). Using numpy and numba vectorized search methods, the motif search can be perfromed on the forward, reverse, of both strands of the genome, as specified by the user. Following the search, one-sided proportion tests are then performed per motif per FASTA entry to determine motif enrichment or depletion.. The results are saved to a CSV file containing motif information, FASTA file information, base probabilities of each FASTA entry, and statistic values used to perform the one-sided proportion test.
 
+Please keep in mind that as the number of FASTA entries and motifs, and size of FASTA entries and motifs increase, the more computationally expensive the program is. Thus, these increases will prolong the program's duration.
+
 [Github Project URL](https://github.com/bluker17/Genome_Motif_Analyzer)
 
 ## License
@@ -126,13 +128,17 @@ conda env create -f environment.yml
 ```bash
 conda activate motif_analyzer
 ```
-2. Run any or all of the following commands to test the program:
+2. Run any of the following commands to test the program and the time it takes to complete runs with the test FASTA entries and motif. Upon completion of each test, the time results will be displayed to the user.
 ```bash
-testing_materials/cattle_test.sh
+testing_materials/cattle_test.sh # To execute this test, please refer to the commands below to collect the test FASTA files.
 testing_materials/DNA_phage_test.sh
 testing_materials/RNA_test_phage.sh
 ```
-If the above commands do not work, then please run the following command and retry executing the test runs.
+- To execute the `cattle_test.sh`, please download the "Genome Sequences (FASTA)" option of the [*Bos taurus*](https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_002263795.3/) genome from NCBI.
+
+- Save the file as `cattle_test_genome.zip` and unzip the contents in `testing_materials/example_outputs`. Once complete, the test file can be executed.
+
+If any of the above testing commands do not work, then please run the following command and retry executing the test runs.
 ```bash
 chmod +x testing_materials/*.sh
 ```
