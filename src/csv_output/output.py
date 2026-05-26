@@ -5,7 +5,7 @@ import csv
 from pathlib import Path
 
 from src.alphabet.macromolecule_alphabet import Alphabet
-from src.alphabet.result_alphabet import EntryResults, StrandResults, MotifObservation
+from src.alphabet.result_alphabet import EntryResults
 
 class CSVWriter:
     """

@@ -6,7 +6,7 @@ import numpy as np
 from statsmodels.stats.proportion import proportions_ztest
 
 from src.alphabet.macromolecule_alphabet import Alphabet
-from src.alphabet.result_alphabet import EntryResults, StrandResults, MotifObservation
+from src.alphabet.result_alphabet import EntryResults
 
 class Statistics:
     """

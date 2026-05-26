@@ -11,6 +11,10 @@ src/alphabet/__pycache__
 
 # Outputs
 output/*
+testing_materials/example_outputs/cattle_test/*
+testing_materials/example_outputs/DNA_test/*
+testing_materials/example_outputs/RNA_test/*
+
 
 # Data
 data/*

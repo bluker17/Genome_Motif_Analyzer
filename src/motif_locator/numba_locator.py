@@ -11,7 +11,6 @@ from src.alphabet.macromolecule_alphabet import Alphabet
 from src.alphabet.result_alphabet import EntryResults, StrandResults, MotifObservation
 
 import numpy as np
-import sys
 
 @njit(cache=True)
 def motif_search_numba(genome: np.ndarray, motif: np.ndarray) -> int:

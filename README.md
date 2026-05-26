@@ -1,18 +1,17 @@
 # Genome Motif Analyzer
-> Please use the latest stable release. Download here: [Latest Release URL](hhttps://github.com/bluker17/Genome_Motif_Analyzer/releases/latest)
+> Please use the latest stable release. Download here: [Latest Release URL](https://github.com/bluker17/Genome_Motif_Analyzer/releases/latest)
 
 ## Author
 **Bobby Luker**    
 rluker@charlotte.edu    
-UNCC ID: 801484356
 
 ## Program Description
 
-From user provided DNA or RNA FASTA file(s) and a motif information CSV file, the program counts all motif instances within all entries of the FASTA file(s). Using numpy and numba vectorized search methods, the motif search can be perfromed on the forward, reverse, of both strands of the genome, as specified by the user. Following the search, one-sided proportion tests are then performed per motif per FASTA entry to determine motif enrichment or depletion.. The results are saved to a CSV file containing motif information, FASTA file information, base probabilities of each FASTA entry, and statistic values used to perform the one-sided proportion test.
+Given user-provided DNA or RNA FASTA file(s) and a motif information CSV file, the program counts all motif instances within all entries of the FASTA file(s). Using NumPy and Numba vectorized search methods, the motif search can be performed on the forward, reverse, or both strands of the genome, as specified by the user. Following the search, one-sided proportion tests are performed per motif per FASTA entry to determine motif enrichment or depletion. The results are then saved to a CSV file containing motif information, FASTA file information, base probabilities of each FASTA entry, and statistical values used to perform the one-sided proportion test.
 
-Please keep in mind that as the number of FASTA entries and motifs, and size of FASTA entries and motifs increase, the more computationally expensive the program is. Thus, these increases will prolong the program's duration.
+Please keep in mind that as the number and size of FASTA entries and motifs increase, the more computationally expensive the program becomes. Consequently, larger input datasets will prolong the program's execution time.
 
-[Github Project URL](https://github.com/bluker17/Genome_Motif_Analyzer)
+[GitHub Project URL](https://github.com/bluker17/Genome_Motif_Analyzer)
 
 ## License
 **GNU General Public License v3.0**
@@ -25,7 +24,7 @@ Review `LICENSE` for details.
     └── 📁data
     └── 📁output
     └── 📁src
-        └── alphabet
+        └── 📁alphabet
             ├── __init__.py
             ├── macromolecule_alphabet.py
             ├── result_alphabet.py
@@ -44,12 +43,33 @@ Review `LICENSE` for details.
             ├── statistics.py
     └── 📁testing_materials
         └── 📁example_data
+            └── 📁DNA_test_phages
+                ├── Sa_phages.fasta
+                ├── Sp_phages.fasta
+            └── 📁RNA_test_phage
+                ├── Sa_phages_RNA.fasta
+            ├── test_cattle_motifs.csv
+            ├── test_DNA_motifs.csv
+            ├── test_RNA_motifs.csv
         └── 📁example_outputs
+            └── 📁cattle_test
+            └── 📁DNA_test
+            └── 📁RNA_test
         └── 📁expected_example_outputs
-        ├── run_test_1.sh
-        ├── run_test_2.sh
-        ├── run_test_3.sh
-        ├── run_test_4.sh
+            └── 📁cattle_test
+                ├── cattle_both_strands_test.csv
+            └── 📁DNA_test
+                ├── DNA_phage_both_strand_test.csv
+                ├── DNA_phage_forward_strand_test.csv
+                ├── DNA_phage_reverse_strand_test.csv
+            └── 📁RNA_test
+                ├── RNA_phage_both_strand_test.csv
+                ├── RNA_phage_forward_strand_test.csv
+                ├── RNA_phage_reverse_strand_test.csv
+        └── test_scripts
+            ├── cattle_test.sh
+            ├── DNA_phage_test.sh
+            ├── RNA_phage_test.sh
     ├── dependencies.txt
     ├── environment.yml
     ├── LICENSE
@@ -62,28 +82,28 @@ Review `LICENSE` for details.
 
 `output/`: Contains the generated CSV output files from running the program.
 
-`src/`: Contains multiple subdirectories leading to modules handling the input and output data. 
+`src/`: Contains multiple subdirectories leading to modules that handle the input and output data. 
 
-1. `alphabet/` contains modules that define dataclasses containing information passed throughout the modules of the program.
+1. `alphabet/` contains modules that define dataclasses containing information passed throughout the program modules.
     - `macromolecule_alphabet.py` defines the DNA and RNA alphabet dataclasses, which contain degenerate and complement base information, and bit maps for converting genetic and motif sequences for faster motif searches. 
-    - `result_alphabet` has three dataclasses that build upon each other:
+    - `result_alphabet.py` has three dataclasses that build upon each other:
         1. `MotifObservations` which stores the search results for a specific motif.
         2. `StrandResults` which stores the base probabilities, and proportion test results per strand of a FASTA entry using the information from `MotifObservations`.
         3. `EntryResults` which stores all gathered results per FASTA entry using `StrandResults`.
 
-2. `file_reader/` contains module `reader.py` which collects all the provided FASTA files and motifs to search from the provided motif CSV file.
-3. `motif_locator/` contains modules that search the FASTA file(s) for motif instances and passes the results to `statistics.py` via dataclasses found in `result_alphabet.py`.
-    - `numpy_locator.py`  searches for all instances of motifs with a length of 4 bp or less in the FASTA files using the numpy vectorization. 
-    - `numba_locator.py` searches for all instances of motifs with a length greater than 4 bp in the FASTA files using the numba vectorization. 
-4. `statistic_analysis/` contain module `statistics.py` which performs a one-sided proportion tests on motif occurrences per strand and per FASTA file as provided from the `result_alphabet.py` dataclasses. Statistical and locator results are saved into a dictionary and passed onto `output.py`.
-5. `csv_output/`contains module `output.py` which generates a CSV file for the overall results with the following information:
+2. `file_reader/` contains the module `reader.py` which collects all the provided FASTA files and motifs for searching from the provided motif CSV file.
+3. `motif_locator/` contains modules that search the FASTA file(s) for motif instances and pass the results to `statistics.py` via dataclasses found in `result_alphabet.py`.
+    - `numpy_locator.py`  searches for all instances of motifs with a length of 4 bp or less in the FASTA files using NumPy vectorization. 
+    - `numba_locator.py` searches for all instances of motifs with a length greater than 4 bp in the FASTA files using Numba vectorization. 
+4. `statistic_analysis/` contains the module `statistics.py` which performs one-sided proportion tests on motif occurrences per strand and per FASTA file as provided from the `result_alphabet.py` dataclasses. Statistical and locator results are saved into a dictionary and passed onto `output.py`.
+5. `csv_output/`contains the module `output.py` which generates a CSV file for the overall results with the following information:
     - FASTA Organism (genetic entry in FASTA file)
     - FASTA File
     - Strand Searched ('forward' or 'reverse')
     - Motif Enzyme Name
     - Enzyme Source Organism
     - Motif Sequence
-    - Significance ('+' for observing signficantly more motifs than expected, '-' for observing significanty less motifs than expected, 0 no signifcant difference of motifs from expected)
+    - Significance ('+' for observing significantly more motifs than expected, '-' for observing significantly less motifs than expected, '0' for no significant difference between observed and expected motifs)
     - p-value (per genetic entry in FASTA file)
     - z-stat (per genetic entry in FASTA file)
     - Observed Motif Count
@@ -96,15 +116,15 @@ Review `LICENSE` for details.
 
 `main.py` executes all modules to produce results. 
 
-`run_test.sh`: Bash script that executes multiple test runs at different coverage threshold values for the user.
+`testing_materials/test_scripts/`: Contains different scripts for the user to test the program with.
 
-`testing_materials/example_runs/`: Contains output CSV files for different parameters and data when a `run_test_X.sh` is executed.
+`testing_materials/example_outputs/`: Contains output CSV files for different parameters and data when a script from `testing_materials/test_scripts/` is executed.
 
-`testing_materials/expected_example_runs/`: Contains the expected CSV output files for each `run_test_X.sh`.
+`testing_materials/expected_example_outputs/`: Contains the expected CSV output files for each test script from `testing_materials/test_scripts/`.
 
 `environment.yml`: Contains the full Conda environment specification, including Python version, required packages, dependency versions, and channels.
 
-`dependencies.txt`: Contains all the neccesary packages for program to execute. 
+`dependencies.txt`: Contains all the necessary packages for program to execute. 
 
 `LICENSE`: Contains the full text of the GNU General Public License v3.0, which defines the terms under which the software may be used, modified, and redistributed.
 
@@ -128,22 +148,22 @@ conda env create -f environment.yml
 ```bash
 conda activate motif_analyzer
 ```
-2. Run any of the following commands to test the program and the time it takes to complete runs with the test FASTA entries and motif. Upon completion of each test, the time results will be displayed to the user.
+2. Run any of the following commands to test the program and the time it takes to complete runs with the test FASTA entries and motifs. Upon completion of each test, the time results will be displayed to the user.
 ```bash
-testing_materials/cattle_test.sh # To execute this test, please refer to the commands below to collect the test FASTA files.
-testing_materials/DNA_phage_test.sh
-testing_materials/RNA_test_phage.sh
+testing_materials/test_scripts/cattle_test.sh # To execute this test, please refer to the commands below to collect the test FASTA files.
+testing_materials/test_scripts/DNA_phage_test.sh
+testing_materials/test_scripts/RNA_phage_test.sh
 ```
 - To execute the `cattle_test.sh`, please download the "Genome Sequences (FASTA)" option of the [*Bos taurus*](https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_002263795.3/) genome from NCBI.
 
-- Save the file as `cattle_test_genome.zip` and unzip the contents in `testing_materials/example_outputs`. Once complete, the test file can be executed.
+- Save the file as `cattle_test_genome.zip` and unzip the contents in `testing_materials/example_data`. Ensure the contents are located in a directory labeled `cattle_test_genome`. Once complete, the test file can be executed.
 
 If any of the above testing commands do not work, then please run the following command and retry executing the test runs.
 ```bash
-chmod +x testing_materials/*.sh
+chmod +x testing_materials/test_scripts/*.sh
 ```
 
-3. Results from the test runs can be in their respective directory in `testing_materials/example_outputs/`. The generated test output CSV files can be compared to the expected results in `testing_materials/expected_example_outputs/`.
+3. Results from the test runs can be found in their respective directories in `testing_materials/example_outputs/`. The generated test output CSV files can be compared to the expected results in `testing_materials/expected_example_outputs/`.
 
 
 4. To run the program with specific data, place the FASTA files in a sub-directory of `data/` and place the motif information CSV file into `data/`. **Please refer to `testing_materials/example_data/` for the required format of motif information CSV files.** The following is an example of all provided files in the `data/`:
@@ -156,7 +176,7 @@ chmod +x testing_materials/*.sh
 
 5. Following the example in step 4, the program can then be run as the following single-line command:
 ```bash
-./main.py -f data/cattle/ -m data/sa_motif.csv -c output/20260520_sa_results.csv -s forward
+./main.py -f data/cattle/ -m data/sa_motifs.csv -c output/20260520_sa_results.csv -s forward --macromolecule DNA
 ```
 If the above commands do not work, then please run the following command and retry executing the test runs.
 ```bash
@@ -194,15 +214,7 @@ Used for parsing command-line arguments and handling CLI input configuration.
 Python Software Foundation. (n.d.). *collections — Container datatypes. Python 3 Documentation*.
 https://docs.python.org/3/library/collections.html#collections.Counter
 
-Used for counting hashable objects, producing frequency distributions, and efficiently aggregating occurrences in iterable data.
-
----
-
-**`collections.defaultdict`**    
-Python Software Foundation. (n.d.). *collections — Container datatypes. Python 3 Documentation*.
-https://docs.python.org/3/library/collections.html#collections.defaultdict
-
-Used for dictionary-like objects that automatically initialize missing keys with a default factory function (e.g., lists, integers, sets), commonly used to simplify grouping and aggregation logic without needing explicit key existence checks.
+Used for counting nucleotide bases within a FASTA entry.
 
 ---
 
@@ -210,15 +222,15 @@ Used for dictionary-like objects that automatically initialize missing keys with
 Python Software Foundation. (n.d.). *csv — CSV File Reading and Writing*. Python 3 Documentation.
 https://docs.python.org/3/library/csv.html
 
-Used for reading and writing tabular data in Comma-Separated Values (CSV) format, supporting parsing, dialect handling, and data serialization.
+Used for reading and writing data in Comma-Separated Values (CSV) format.
 
 ---
 
 **`math`**    
-Python Software Foundation. (n.d.). math — Mathematical functions. Python 3 Documentation.
+Python Software Foundation. (n.d.). *math — Mathematical functions*. Python 3 Documentation.
 https://docs.python.org/3/library/math.html
 
-Used for mathematical operations such as trigonometry, logarithms, exponentials, rounding, combinatorics, and numeric constants like π and e.
+Used for establishing Not a Number constants for edge cases.
 
 ---
 
@@ -234,13 +246,13 @@ Used for platform-independent file and directory path handling.
 Python Software Foundation. (2024). *sys — System-specific parameters and functions*. Python 3 Documentation.
 https://docs.python.org/3/library/sys.html
 
-Used for interacting with interpreter-level functionality such as command-line arguments and program exit handling.
+Used for interacting with command-line arguments and program exit handling.
 
 ---
 
 **`traceback`**    
 Python Software Foundation. (n.d.). *traceback — Print or retrieve a stack traceback. Python 3 Documentation*.
-[https://docs.python.org/3/library/traceback.html](https://docs.python.org/3/library/traceback.html)
+https://docs.python.org/3/library/traceback.html
 
 Used for extracting, formatting, and printing the call stack of an exception, enabling detailed debugging and logging of errors in Python applications.
 
@@ -250,7 +262,7 @@ Used for extracting, formatting, and printing the call stack of an exception, en
 Python Software Foundation. (n.d.). *typing — Support for type hints. Python 3 Documentation*.
 https://docs.python.org/3/library/typing.html
 
-Used for type annotations, including generics, unions, optional types, and static type checking support in Python code.
+Used for type annotations in Python code.
 
 ---
 
@@ -260,15 +272,7 @@ Used for type annotations, including generics, unions, optional types, and stati
 Cock, P. J. A., Antao, T., Chang, J. T., et al. (2009). *Biopython: freely available Python tools for computational molecular biology and bioinformatics*. Bioinformatics, 25(11), 1422–1423.
 https://biopython.org/
 
-Used for file parsing (FASTA/GenBank),
-
----
-
-**`pyahocorasick`**    
-Appier Ltd. (n.d.). *pyahocorasick documentation*.
-https://pyahocorasick.readthedocs.io/en/latest/
-
-Used for efficient multi-pattern string matching using the Aho–Corasick algorithm, applied to motif searching.
+Used for parsing FASTA files to extract sequences from FASTA entries. 
 
 ---
 
@@ -276,7 +280,7 @@ Used for efficient multi-pattern string matching using the Aho–Corasick algori
 Seabold, S., & Perktold, J. (2010). *Statsmodels: Econometric and statistical modeling with Python*. Proceedings of the 9th Python in Science Conference.
 https://www.statsmodels.org/stable/
 
-Used for 
+Used to calculate a one-sided proportion test per motif per FASTA entry.
 
 ---
 
@@ -291,11 +295,15 @@ The `IUPAC` dictionary maps ambiguity codes (R, Y, S, W, K, M, B, D, H, V, N) to
 
 ### AI assistance
 
-This project was developed with the help of [ChatGPT-5.5](https://chatgpt.com) (`chatgpt-5.5`) by [OpenAI](https://openai.com).
+This project was developed with the help of [ChatGPT-5.5](https://chatgpt.com) by [OpenAI](https://openai.com) and [Gemini-3.1-Pro](https://gemini.google.com/app) by [Google](https://gemini.google/about/).
 
 ChatGPT assisted with:
-- Code architecture and implementation
+- Code architecture and implementation of numba search methods
+- Code architecture and implementation of bitmask conversion for search methods
 - Docstring and documentation writing
+
+Gemini assisted with:
+- Code architecture and implementation of Alphabet dataclasses
 - Debugging and code review
 
 All generated code was reviewed and tested by the author.
