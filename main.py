@@ -19,8 +19,9 @@ from src.motif_locator.numba_locator import Numba_Motif_Search
 # Statistical analysis
 from src.statistic_analysis.statistics import Statistics
 
-# CSV output
+# CSV stats outputs
 from src.csv_output.output import CSVWriter
+from src.summary_statistics.summary import SummaryStats
 
 def parse_args() -> argparse.Namespace:
     """
@@ -192,11 +193,16 @@ def main() -> int:
 
                     csv_writer.append_csv(stats=entry_data, fasta_file=genome.name,entry_name=entry_name)
 
+        summary = SummaryStats(Path(args.csv_output))
+        summary.summary_findings()
+
         sys.stdout.write("""
         Program executed successfully.
             Output CSV File: {csv_output}
+            Summary Output CSV File: {summary_csv_output}
         """.format(
-            csv_output=args.csv_output
+            csv_output=args.csv_output,
+            summary_csv_output=f"output/{args.csv_output.stem}_summary_statistics.csv"
         ))
 
         return 0
