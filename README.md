@@ -41,6 +41,9 @@ Review `LICENSE` for details.
         └── 📁statistic_analysis
             ├── __init__.py
             ├── statistics.py
+        └── 📁statistic_analysis
+            ├── __init__.py
+            ├── summary.py
     └── 📁testing_materials
         └── 📁example_data
             └── 📁DNA_test_phages
@@ -298,7 +301,7 @@ The `IUPAC` dictionary maps ambiguity codes (R, Y, S, W, K, M, B, D, H, V, N) to
 This project was developed with the help of [ChatGPT-5.5](https://chatgpt.com) by [OpenAI](https://openai.com) and [Gemini-3.1-Pro](https://gemini.google.com/app) by [Google](https://gemini.google/about/).
 
 ChatGPT assisted with:
-- Code architecture and implementation of numba search methods
+- Code architecture and implementation of Numba search methods
 - Code architecture and implementation of bitmask conversion for search methods
 - Docstring and documentation writing
 

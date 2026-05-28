@@ -81,7 +81,13 @@ class Statistics:
                     expected_prob = self.expected_prob(base_probs=base_probs, motif=motif)
 
                     # Edge case protection
-                    if possible_positions <= 0 or expected_prob in [0, 1]:
+                    variance = possible_positions * expected_prob * (1-expected_prob)
+                    if (possible_positions <= 0
+                        or expected_prob in [0, 1] 
+                        or variance == 0
+                        or observed == 0
+                        or observed == possible_positions):
+                        
                         data.z_stat = math.nan
                         data.p_value = math.nan
                         data.significance = math.nan

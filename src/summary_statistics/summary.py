@@ -10,7 +10,7 @@ class SummaryStats:
     """
     def __init__(self, input_file: Path):
         self.input_file = input_file
-        self.output_file = f"output/{input_file.stem}_summary_statistics.csv"
+        self.output_file = f"{input_file.stem}_summary_statistics.csv"
         self.findings = None
         return
     
