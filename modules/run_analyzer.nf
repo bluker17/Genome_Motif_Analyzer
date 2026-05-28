@@ -21,8 +21,8 @@ process Run_Analyzer {
     """
     main.py \\
         --csv_output ${output_filename} \\
-        --fasta_files ${params.fasta_files} \\
-        --motif_file ${params.motif_file} \\
+        --fasta_files ${fasta_files} \\
+        --motif_file ${motif_file} \\
         --strand ${params.strand} \\
         --macromolecule ${params.macromolecule}
     """

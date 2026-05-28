@@ -1,5 +1,0 @@
-biopython
-numba
-numpy
-python=3.11
-statsmodels

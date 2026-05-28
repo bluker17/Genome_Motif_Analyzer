@@ -7,6 +7,7 @@ src/statistic_analysis/__pycache__
 src/csv_output/__pycache__
 src/file_reader/__pycache__
 src/alphabet/__pycache__
+src/summary_statistics/__pycache__
 *pyc
 
 # Outputs
@@ -22,7 +23,8 @@ work/
 
 # Data
 data/*
-testing_materials/example_data/cattle*
+testing_materials/example_data/cattle_test_genome
+/testing_materials/example_data/DNA_test_phages/N_meningitidis_phages.fasta
 
 # Error log
 errors.log

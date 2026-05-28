@@ -34,19 +34,19 @@ def parse_args() -> argparse.Namespace:
     """
     file_parser = argparse.ArgumentParser(description="Takes the directory and file arguments needed for the program.")
 
-    file_parser.add_argument("-c", "--csv_output", 
+    file_parser.add_argument("--csv_output", 
                             type=Path, required=True, 
                             help="CSV path and filename output.")
     
-    file_parser.add_argument("-f", "--fasta_files", 
+    file_parser.add_argument("--fasta_files", 
                             type=Path, required=True,
                             help="Directory containing FASTA files.")
     
-    file_parser.add_argument("-m", "--motif_file", 
+    file_parser.add_argument("--motif_file", 
                             type=Path, required=True,
                             help="CSV file containing the motif information.")
     
-    file_parser.add_argument("-s", "--strand_to_search",
+    file_parser.add_argument("--strand",
                              type=str, required=True,
                              choices=["forward", "reverse", "both"],
                              help="Distinguishes which strand to investigate. Options are 'forward', 'reverse', or 'both'.")
@@ -83,9 +83,6 @@ def validate_args(args: argparse.Namespace):
     if not fasta_dir.is_dir():
         raise ValueError("FASTA files path must be a directory containing FASTA files.")
 
-    # if not fasta_dir.is_relative_to("*/data/") and not fasta_dir.is_relative_to("*/testing_materials/example_data/"):
-    #     raise FileNotFoundError("FASTA directory must be located in 'data/'.")
-
     # Recursively find FASTA files
     fasta_files = [file for file in fasta_dir.rglob("*") if file.is_file() and file.suffix.lower() in valid_extensions]
 
@@ -108,17 +105,12 @@ def validate_args(args: argparse.Namespace):
     if motif_file.suffix.lower() != ".csv":
         raise ValueError("Motif file must be a CSV file (.csv).")
     
-    # if not motif_file.is_relative_to("data/") and not motif_file.is_relative_to("testing_materials/example_data/"):
-    #     raise FileNotFoundError("Motif file must be located in 'data/'.")
 
     # Validate CSV output file
     output_path = Path(args.csv_output)
 
     if output_path.suffix.lower() != ".csv":
         raise ValueError("CSV output file must have a .csv extension.")
-
-    # if not output_path.is_relative_to("output/") and not output_path.is_relative_to("testing_materials/example_outputs/"):
-    #     raise FileNotFoundError("CSV output file must be located in 'output/'.")
 
 def main() -> int: 
     try:
@@ -129,13 +121,13 @@ def main() -> int:
         Arguments received:
             Directory containing FASTA file(s): {fasta_files}
             Macromolecule in FASTA file(s): {macromolecule}
-            Strand to investigate: {strand_to_search}
+            Strand to investigate: {strand}
             Motif information CSV file: {motif_file}
             Output CSV file: {csv_output}
         """.format(
             fasta_files=args.fasta_files,
             macromolecule = args.macromolecule,
-            strand_to_search = args.strand_to_search,
+            strand = args.strand,
             motif_file=args.motif_file,
             csv_output=args.csv_output
         ))
@@ -175,11 +167,11 @@ def main() -> int:
         numba_locator = Numba_Motif_Search(long_motifs, genome_files, macromolecule)
 
         for genome in genome_files:
-            print(f"\nProcessing {genome}")
+            # print(f"\nProcessing {genome}")
 
             if short_motifs:
                 for entry_name, sequence in numpy_locator.stream_fasta(genome):
-                    #print(f"\tProcessing FASTA entry {entry_name}")
+                    # print(f"\tProcessing FASTA entry {entry_name}")
                     entry_data: EntryResults = numpy_locator.process_entry(entry_name, sequence)
                     entry_data = stats_engine.run_proportion_test(entry_data)
 
@@ -187,23 +179,17 @@ def main() -> int:
 
             if long_motifs:
                 for entry_name, sequence in numba_locator.stream_fasta(genome):
-                    #print(f"\tProcessing FASTA entry {entry_name}")
+                    # print(f"\tProcessing FASTA entry {entry_name}")
                     entry_data: EntryResults = numba_locator.process_entry(entry_name, sequence)
                     entry_data = stats_engine.run_proportion_test(entry_data)
 
                     csv_writer.append_csv(stats=entry_data, fasta_file=genome.name,entry_name=entry_name)
 
-        # summary = SummaryStats(Path(args.csv_output))
-        # summary.summary_findings()
-
         sys.stdout.write("""
         Program executed successfully.
             Output CSV File: {csv_output}
-
         """.format(
             csv_output=args.csv_output
-            # Summary Output CSV File: {summary_csv_output}
-            # summary_csv_output=f"output/{args.csv_output.stem}_summary_statistics.csv"
         ))
 
         return 0

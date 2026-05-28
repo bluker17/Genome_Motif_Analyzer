@@ -14,17 +14,5 @@ workflow {
     // Run the pipeline
     analysis_outputs = Run_Analyzer(params.csv_output, fasta_dir_ch, motif_file_ch, params.strand, params.macromolecule)
     Summarize_Stats(analysis_outputs.initial_csv_output)
-
-    // workflow.onComplete {
-    // log.info """
-    // ======================================================
-    // Pipeline Execution Summary
-    // ======================================================
-    // Status:       ${ workflow.success ? 'SUCCESS' : 'FAILED' }
-    // Completed At: ${workflow.complete}
-    // Duration:     ${workflow.duration}
-    // Script Name: ${workflow.scriptName}
-    // ======================================================
-    // """.stripIndent()
-    }
 }
+

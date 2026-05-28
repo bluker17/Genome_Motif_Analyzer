@@ -7,9 +7,9 @@ rluker@charlotte.edu
 
 ## Program Description
 
-Given user-provided DNA or RNA FASTA file(s) and a motif information CSV file, the program counts all motif instances within all entries of the FASTA file(s). Using NumPy and Numba vectorized search methods, the motif search can be performed on the forward, reverse, or both strands of the genome, as specified by the user. Following the search, one-sided proportion tests are performed per motif per FASTA entry to determine motif enrichment or depletion. The results are then saved to a CSV file containing motif information, FASTA file information, base probabilities of each FASTA entry, and statistical values used to perform the one-sided proportion test.
+Given user-provided DNA or RNA FASTA file(s) and a motif information CSV file, the program counts all motif instances within all entries of the FASTA file(s). Utilizing NumPy and Numba vectorized search methods, the motif search can be performed on the forward, reverse, or both strands of the genome, as specified by the user. Following the search, one-sided proportion tests are performed per motif per FASTA entry to determine motif enrichment or depletion. The results are then saved to a CSV file containing motif parameters, FASTA metadata, base probabilities of each FASTA entry, and statistical values used to perform the one-sided proportion test.
 
-Please keep in mind that as the number and size of FASTA entries and motifs increase, the more computationally expensive the program becomes. Consequently, larger input datasets will prolong the program's execution time.
+Please keep in mind that as the number and size of the FASTA entries and motifs increase, the  computational complexity scales accordingly. Consequently, larger input datasets will prolong the program's execution time.
 
 [GitHub Project URL](https://github.com/bluker17/Genome_Motif_Analyzer)
 
@@ -21,7 +21,13 @@ Review `LICENSE` for details.
 ## Project File Structure:
 ```
 └── 📁Genome_Motif_Analyzer
+    └── 📁bin
+        ├── main.py
+        ├── run_summary.py
     └── 📁data
+    └── 📁modules
+        ├── run_analyzer.nf
+        ├── summarize_stats.nf
     └── 📁output
     └── 📁src
         └── 📁alphabet
@@ -41,49 +47,46 @@ Review `LICENSE` for details.
         └── 📁statistic_analysis
             ├── __init__.py
             ├── statistics.py
-        └── 📁statistic_analysis
+        └── 📁summary_statistics
             ├── __init__.py
             ├── summary.py
     └── 📁testing_materials
         └── 📁example_data
             └── 📁DNA_test_phages
-                ├── Sa_phages.fasta
-                ├── Sp_phages.fasta
             └── 📁RNA_test_phage
-                ├── Sa_phages_RNA.fasta
-            ├── test_cattle_motifs.csv
-            ├── test_DNA_motifs.csv
-            ├── test_RNA_motifs.csv
+            ├── cattle_test_motifs.csv
+            ├── DNA_test_motifs.csv
+            ├── RNA_test_motifs.csv
         └── 📁example_outputs
             └── 📁cattle_test
             └── 📁DNA_test
             └── 📁RNA_test
         └── 📁expected_example_outputs
             └── 📁cattle_test
-                ├── cattle_both_strands_test.csv
+                ├── cattle_test_summary_statistics.csv
+                ├── cattle_test.csv
             └── 📁DNA_test
-                ├── DNA_phage_both_strand_test.csv
-                ├── DNA_phage_forward_strand_test.csv
-                ├── DNA_phage_reverse_strand_test.csv
+                ├── DNA_phage_test_summary_statistics.csv
+                ├── DNA_phage_test.csv
             └── 📁RNA_test
-                ├── RNA_phage_both_strand_test.csv
-                ├── RNA_phage_forward_strand_test.csv
-                ├── RNA_phage_reverse_strand_test.csv
-        └── test_scripts
-            ├── cattle_test.sh
-            ├── DNA_phage_test.sh
-            ├── RNA_phage_test.sh
-    ├── dependencies.txt
+                ├── RNA_phage_test_summary_statistics.csv
+                ├── RNA_phage_test.csv
+    ├── .gitignore
     ├── environment.yml
     ├── LICENSE
-    ├── main.py
+    ├── main.nf
+    ├── nextflow.config
     └── README.md
 ```
 
 ## Overview
-`data/`: Contains the example genome FASTA files and example format of motif information CSV files.
+`data/`: An empty directory for the user to place their FASTA and motif data files.
 
-`output/`: Contains the generated CSV output files from running the program.
+`output/`: An empty directory for the user to place their generated CSV output files from the program.
+
+`bin/`: Contains the two python scripts for the program.
+1. `main.py`: Executes most modules to search the FASTA files for motif instances and generate a CSV containing statistical findings upon analysis.
+2. `run_summary.py`: Executes the `summary_statistics/` module to generate summary statistics CSV based on the statistical analysis CSV generated from `main.py`.
 
 `src/`: Contains multiple subdirectories leading to modules that handle the input and output data. 
 
@@ -106,7 +109,7 @@ Review `LICENSE` for details.
     - Motif Enzyme Name
     - Enzyme Source Organism
     - Motif Sequence
-    - Significance ('+' for observing significantly more motifs than expected, '-' for observing significantly less motifs than expected, '0' for no significant difference between observed and expected motifs)
+    - Significance ('+' for observing significantly more motifs than expected, '-' for observing significantly fewer motifs than expected, '0' for no significant difference between observed and expected motifs)
     - p-value (per genetic entry in FASTA file)
     - z-stat (per genetic entry in FASTA file)
     - Observed Motif Count
@@ -116,90 +119,124 @@ Review `LICENSE` for details.
     - Genome Length
     - Genome GC Content
     - Observed Base Probabilities (A, C, G, T/U)
+6. `summary_statistics/` contains the module `summary.py` which generates a CSV file containing summary statistics based on the CSV generated from `output.py`. The CSV contains the following information:
+    - FASTA File
+    - Strand
+    - Enzyme
+    - FASTA Entry Count
+    - p-value mean
+    - p-value median
+    - z-stat mean
+    - z-stat median
 
-`main.py` executes all modules to produce results. 
+`modules`: Contains the Nextflow process modules of the program.
+1. `run_analyzer.nf` executes `main.py`.
+2. `summarize_stats.nf` executes `run_summary.py`.
 
-`testing_materials/test_scripts/`: Contains different scripts for the user to test the program with.
+`main.nf`: The main Nextflow pipeline that executes the Nextflow modules to run the program.
 
-`testing_materials/example_outputs/`: Contains output CSV files for different parameters and data when a script from `testing_materials/test_scripts/` is executed.
+`nextflow.config`: Contains the default testing parameters of the program and establishes  engine profiles that automatically build the necessary program environment.
 
-`testing_materials/expected_example_outputs/`: Contains the expected CSV output files for each test script from `testing_materials/test_scripts/`.
+`testing_materials/example_outputs/`: Contains output CSV files for different parameters and data when a test run is executed.
+
+`testing_materials/expected_example_outputs/`: Contains the expected CSV output files for each test run.
 
 `environment.yml`: Contains the full Conda environment specification, including Python version, required packages, dependency versions, and channels.
-
-`dependencies.txt`: Contains all the necessary packages for program to execute. 
 
 `LICENSE`: Contains the full text of the GNU General Public License v3.0, which defines the terms under which the software may be used, modified, and redistributed.
 
 ## Program Instructions
 
 ### Installation
-
 1. Download the latest release or clone the repository:
 ```bash
 git clone https://github.com/bluker17/Genome_Motif_Analyzer.git
 ```
 
-2. Create the conda environment. Conda will automatically create an environment named `motif_analyzer` with all the specified packages and versions required to run the program.
-```bash
-conda env create -f environment.yml
-```
+2. If Nextflow is not already installed on your machine, then please follow the installation instructions here: [Nextflow Installation](https://docs.seqera.io/nextflow/install)
 
 ### Usage
+1. Genome Motif Analyzer supports Conda, Micromamba, and Mamba package managers. Execute the default DNA phage test run with the profile that matches your system:
+```bash
+# If you use standard Conda
+nextflow run main.nf -profile conda
 
-1. Activate the environment:
-```bash
-conda activate motif_analyzer
+# If you use Micromamba
+nextflow run main.nf -profile micromamba
+
+# If you use Mamba
+nextflow run main.nf -profile mamba
 ```
-2. Run any of the following commands to test the program and the time it takes to complete runs with the test FASTA entries and motifs. Upon completion of each test, the time results will be displayed to the user.
+**Please keep in mind that the first run will take longer than expected as Nextflow must initialize the environment. After the initial run, Nextflow caches the environment for future runs. Thus, subsequent runs will execute faster.**
+
+If all dependencies are installed locally, then there is no reason to include the -profile parameter when executing runs.
+
+2. Run any of the following commands to further test the program and the time it takes to complete runs with the test FASTA entries and motifs.
 ```bash
-testing_materials/test_scripts/cattle_test.sh # To execute this test, please refer to the commands below to collect the test FASTA files.
-testing_materials/test_scripts/DNA_phage_test.sh
-testing_materials/test_scripts/RNA_phage_test.sh
+# RNA TEST
+# Please update '-profile' with the appropriate profile used on your machine.
+nextflow run main.nf -profile ProfileUsed \
+    --csv_output testing_materials/example_outputs/RNA_test/RNA_phage_test.csv \
+    --fasta_files testing_materials/example_data/RNA_test_phage/ \
+    --motif_file testing_materials/example_data/RNA_test_motifs.csv \
+    --strand both \
+    --macromolecule RNA
 ```
-- To execute the `cattle_test.sh`, please download the "Genome Sequences (FASTA)" option of the [*Bos taurus*](https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_002263795.3/) genome from NCBI.
+
+```bash
+# EUKARYOTIC DNA TEST
+# Please follow instructions below to download test data before executing.
+# Please update '-profile' with the appropriate profile used on your machine.
+nextflow run main.nf -profile micromamba \
+    --csv_output testing_materials/example_outputs/cattle_test/cattle_test.csv \
+    --fasta_files testing_materials/example_data/cattle_test_genome/ \
+    --motif_file testing_materials/example_data/cattle_test_motifs.csv \
+    --strand both \
+    --macromolecule DNA
+```
+- To execute the 'EUKARYOTIC DNA TEST', please download the "Genome Sequences (FASTA)" option of the [*Bos taurus*](https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_002263795.3/) genome from NCBI.
 
 - Save the file as `cattle_test_genome.zip` and unzip the contents in `testing_materials/example_data`. Ensure the contents are located in a directory labeled `cattle_test_genome`. Once complete, the test file can be executed.
-
-If any of the above testing commands do not work, then please run the following command and retry executing the test runs.
-```bash
-chmod +x testing_materials/test_scripts/*.sh
-```
 
 3. Results from the test runs can be found in their respective directories in `testing_materials/example_outputs/`. The generated test output CSV files can be compared to the expected results in `testing_materials/expected_example_outputs/`.
 
 
-4. To run the program with specific data, place the FASTA files in a sub-directory of `data/` and place the motif information CSV file into `data/`. **Please refer to `testing_materials/example_data/` for the required format of motif information CSV files.** The following is an example of all provided files in the `data/`:
+4. To run the program with specific data, place the FASTA files in a sub-directory of `data/` and place the motif information CSV file into `data/`. **Please refer to any of the motif CSV files in `testing_materials/example_data/` for the required format of motif information CSV files.** The following is an example of all provided files in the `data/`:
 ```
 └── 📁Genome_Motif_Analyzer
     └── 📁data
         └── 📁cattle
+            ├── cattle_1.fasta
+            ├── cattle_2.fasta
         ├── sa_motifs.csv
 ```
 
 5. Following the example in step 4, the program can then be run as the following single-line command:
 ```bash
-./main.py -f data/cattle/ -m data/sa_motifs.csv -c output/20260520_sa_results.csv -s forward --macromolecule DNA
-```
-If the above commands do not work, then please run the following command and retry executing the test runs.
-```bash
-chmod +x main.py
+nextflow run main.nf -profile ProfileUsed \
+    --csv_output output/20260528_cattle_sa_phages.csv \
+    --fasta_files data/cattle/ \
+    --motif_file data/sa_motifs.csv \
+    --strand forward \
+    --macromolecule DNA
 ```
 
 ### Command-Line Arguments
-| Argument  | Description |
-| --- | --- |
-| -c, --csv_output | Output CSV file path and filename |
-| -f, --fasta_files | Directory containing FASTA file(s). |
-| -m, --motif_file | CSV file containing motif information. |
-| -s, --strand_to_search | Strand to search for motifs. Options: forward, reverse, or both. |
-| --macromolecule | Macromolecule provided in FASTA directory. |
+| Scope | Argument  | Description |
+| --- | --- | --- |
+| Python | --csv_output | Output CSV file path and filename |
+| Python | --fasta_files | Directory containing FASTA file(s). |
+| Python | --motif_file | CSV file containing motif information. |
+| Python | --strand | Strand to search for motifs. Options: forward, reverse, or both. |
+| Python | --macromolecule | Macromolecule provided in FASTA directory. |
+| Nextflow | -profile | Package manager used to establish the program environment |
 
 ### Expected Output:
 
 - Searches the provided FASTA file(s) with the provided motif sequence(s).
 - Performs a one-sided proportion test per motif per strand of the provided FASTA file(s).
 - Results are saved to a CSV file.
+- Summary statistics are generated into a CSV file based on the initial CSV file.
 
 ## References
 
@@ -269,7 +306,7 @@ Used for type annotations in Python code.
 
 ---
 
-### Third-Party Libraries
+### Third-Party Python Libraries
 
 **`Biopython`**    
 Cock, P. J. A., Antao, T., Chang, J. T., et al. (2009). *Biopython: freely available Python tools for computational molecular biology and bioinformatics*. Bioinformatics, 25(11), 1422–1423.
@@ -296,6 +333,11 @@ The `IUPAC` dictionary maps ambiguity codes (R, Y, S, W, K, M, B, D, H, V, N) to
 
 ---
 
+**Nextflow Workflow Management**    
+P. Di Tommaso, et al. Nextflow enables reproducible computational workflows. Nature Biotechnology 35, 316–319 (2017) doi:10.1038/nbt.3820
+
+---
+
 ### AI assistance
 
 This project was developed with the help of [ChatGPT-5.5](https://chatgpt.com) by [OpenAI](https://openai.com) and [Gemini-3.1-Pro](https://gemini.google.com/app) by [Google](https://gemini.google/about/).
@@ -306,7 +348,8 @@ ChatGPT assisted with:
 - Docstring and documentation writing
 
 Gemini assisted with:
-- Code architecture and implementation of Alphabet dataclasses
+- Code architecture and implementation of Alphabet dataclasses and Nextflow pipeline
+- Pipeline orchestration debugging and configuration code review
 - Debugging and code review
 
 All generated code was reviewed and tested by the author.
